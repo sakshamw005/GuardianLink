@@ -2,13 +2,8 @@ import { URLScanner } from "@/components/URLScanner";
 import { ShieldIcon } from "@/components/ShieldIcon";
 import { Shield, Zap, Lock, Eye } from "lucide-react";
 import { motion } from "framer-motion";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const isLoggedIn = localStorage.getItem('token');
-
   return (
     <div className="min-h-screen bg-background grid-pattern relative overflow-hidden">
       {/* Animated background gradients */}
@@ -30,16 +25,6 @@ const Index = () => {
             <a href="#features" className="hover:text-foreground transition-colors">Features</a>
             <a href="#how-it-works" className="hover:text-foreground transition-colors">How it Works</a>
           </nav>
-          <div className="flex items-center gap-4">
-            {isLoggedIn ? (
-              <Button onClick={() => navigate('/dashboard')}>Dashboard</Button>
-            ) : (
-              <>
-                <Button variant="outline" onClick={() => navigate('/login')}>Sign In</Button>
-                <Button onClick={() => navigate('/signup')}>Get Started</Button>
-              </>
-            )}
-          </div>
         </div>
       </header>
 

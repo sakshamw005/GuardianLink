@@ -96,25 +96,7 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// JWT verification middleware
-function verifyToken(req, res, next) {
-  const token = req.headers.authorization?.split(' ')[1];
-  
-  if (!token) {
-    return res.status(401).json({ error: 'No token provided' });
-  }
-  
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'development_secret');
-    req.userId = decoded.id;
-    req.userEmail = decoded.email;
-    next();
-  } catch (error) {
-    return res.status(401).json({ error: 'Invalid token' });
-  }
-}
-
-// Extension token verification
+// Extension token verification (keep for extension)
 function verifyExtensionToken(req, res, next) {
   const token = req.headers['x-extension-token'];
   
@@ -134,30 +116,6 @@ function verifyExtensionToken(req, res, next) {
 // ========== AUTHENTICATION ENDPOINTS ==========
 
 // Register user
-app.post('/api/auth/register', async (req, res) => {
-  const { email, username, password } = req.body;
-  
-  if (!email || !username || !password) {
-    return res.status(400).json({ error: 'Email, username, and password required' });
-  }
-  
-  const userId = crypto.randomUUID();
-  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-  
-  db.run(
-    'INSERT INTO users (id, email, username, password_hash) VALUES (?, ?, ?, ?)',
-    [userId, email, username, passwordHash],
-    function(err) {
-      if (err) {
-        return res.status(400).json({ error: 'User already exists' });
-      }
-      
-      const token = jwt.sign({ id: userId, email }, process.env.JWT_SECRET || 'development_secret');
-      res.json({ token, userId, email, username });
-    }
-  );
-});
-
 // ========== HEALTH CHECK ==========
 
 // Health check endpoint for frontend
@@ -173,53 +131,22 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// ========== AUTHENTICATION ENDPOINTS ==========
-
-// Login user
-app.post('/api/auth/login', async (req, res) => {
-  const { email, password } = req.body;
-  
-  if (!email || !password) {
-    return res.status(400).json({ error: 'Email and password required' });
-  }
-  
-  const passwordHash = crypto.createHash('sha256').update(password).digest('hex');
-  
-  db.get(
-    'SELECT id, email, username FROM users WHERE email = ? AND password_hash = ?',
-    [email, passwordHash],
-    (err, row) => {
-      if (err || !row) {
-        return res.status(401).json({ error: 'Invalid credentials' });
-      }
-      
-      // Update last login
-      db.run('UPDATE users SET last_login = CURRENT_TIMESTAMP WHERE id = ?', [row.id]);
-      
-      const token = jwt.sign({ id: row.id, email: row.email }, process.env.JWT_SECRET || 'development_secret');
-      res.json({ token, userId: row.id, email: row.email, username: row.username });
-    }
-  );
-});
-
 // ========== EXTENSION ENDPOINTS ==========
 
-// Connect extension to user account (after user logs in on website)
-app.post('/api/extension/register', verifyToken, (req, res) => {
+// Register extension session (public endpoint)
+app.post('/api/extension/register', (req, res) => {
   const extensionToken = crypto.randomUUID();
   const sessionId = crypto.randomUUID();
   const { deviceInfo } = req.body;
   
+  // No user required - extension can register without authentication
   db.run(
     'INSERT INTO extension_sessions (id, user_id, extension_token, device_info, last_activity) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-    [sessionId, req.userId, extensionToken, JSON.stringify(deviceInfo)],
+    [sessionId, null, extensionToken, JSON.stringify(deviceInfo)],
     (err) => {
       if (err) {
         return res.status(500).json({ error: 'Failed to register extension' });
       }
-      
-      // Also store in users table for quick lookup
-      db.run('UPDATE users SET extension_token = ? WHERE id = ?', [extensionToken, req.userId]);
       
       res.json({
         extensionToken,
@@ -917,7 +844,7 @@ async function checkSecurityHeaders(url) {
 }
 
 // Main scan endpoint (with user auth)
-app.post('/api/scan', verifyToken, async (req, res) => {
+app.post('/api/scan', async (req, res) => {
   const { url, source } = req.body;
   
   if (!url) {
@@ -964,10 +891,10 @@ app.post('/api/scan', verifyToken, async (req, res) => {
   
   console.log(`\n🔍 Scan ${scanId} started for: ${url} (from ${source || 'website'})`);
   
-  // Store scan as pending
+  // Store scan as pending (no user_id - public access)
   db.run(
     'INSERT INTO scans (id, user_id, url, status) VALUES (?, ?, ?, ?)',
-    [scanId, req.userId, url, 'pending'],
+    [scanId, null, url, 'pending'],
     (err) => {
       if (err) console.error('Failed to log scan:', err);
     }
@@ -1075,7 +1002,7 @@ try {
 });
 
 // Scan history for authenticated user
-app.get('/api/scans', verifyToken, (req, res) => {
+app.get('/api/scans', (req, res) => {
   const limit = req.query.limit || 50;
   
   db.all(
@@ -1098,7 +1025,7 @@ app.get('/api/scans', verifyToken, (req, res) => {
 });
 
 // Get specific scan details
-app.get('/api/scans/:scanId', verifyToken, (req, res) => {
+app.get('/api/scans/:scanId', (req, res) => {
   const { scanId } = req.params;
   
   db.get(

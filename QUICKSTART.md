@@ -4,7 +4,7 @@
 
 ### Step 1: Locate the Extension
 ```
-Navigate to: e:\gardian_link\extension
+Navigate to: your_drive/extension
 ```
 
 ### Step 2: Open Chrome Extensions
