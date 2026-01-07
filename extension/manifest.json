@@ -10,7 +10,8 @@
     "webNavigation",
     "scripting",
     "notifications",
-    "downloads"
+    "downloads",
+    "contextMenus"
   ],
   "host_permissions": [
     "<all_urls>",

@@ -36,6 +36,7 @@ chrome.runtime.onInstalled.addListener(() => {
   loadBlacklist();
   initializeWhitelist();
   verifyExtensionToken();
+  setupContextMenus();
   
   chrome.storage.local.get(['guardianlink_logs'], (data) => {
     if (!data.guardianlink_logs) {
@@ -44,31 +45,82 @@ chrome.runtime.onInstalled.addListener(() => {
   });
 });
 
+// Setup context menus for right-click scanning
+function setupContextMenus() {
+  chrome.contextMenus.removeAll();
+  
+  // Context menu for links
+  chrome.contextMenus.create({
+    id: 'scan-link',
+    title: 'Scan with Guardian Link',
+    contexts: ['link']
+  });
+  
+  // Context menu for current page
+  chrome.contextMenus.create({
+    id: 'scan-page',
+    title: 'Scan this page',
+    contexts: ['page']
+  });
+  
+  console.log('✅ Context menus created');
+}
+
+// Handle context menu clicks
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  if (info.menuItemId === 'scan-link' && info.linkUrl) {
+    console.log('📎 Context menu: Scanning link:', info.linkUrl);
+    analyzeURL(info.linkUrl, tab.id, 'context-menu')
+      .then(decision => {
+        console.log('📊 Decision:', decision.verdict);
+        if (decision.verdict === 'BLOCK') {
+          const decisionJson = encodeURIComponent(JSON.stringify(decision));
+          chrome.tabs.create({ 
+            url: chrome.runtime.getURL(`ui/warning.html?decision=${decisionJson}`)
+          });
+        } else {
+          chrome.notifications.create({
+            type: 'basic',
+            iconUrl: chrome.runtime.getURL('assets/icon-128.png'),
+            title: `✅ Link is ${decision.verdict}`,
+            message: decision.reasoning || 'This link appears to be safe'
+          });
+        }
+      })
+      .catch(error => console.error('❌ Error analyzing link:', error));
+  }
+  
+  if (info.menuItemId === 'scan-page') {
+    console.log('📄 Context menu: Scanning page:', tab.url);
+    analyzeURL(tab.url, tab.id, 'context-menu')
+      .then(decision => {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: chrome.runtime.getURL('assets/icon-128.png'),
+          title: `🔍 Page Analysis: ${decision.verdict}`,
+          message: decision.reasoning || `Security Score: ${decision.combinedScore}%`
+        });
+      })
+      .catch(error => console.error('❌ Error analyzing page:', error));
+  }
+});
+
 // Verify extension token on startup and periodically
 async function verifyExtensionToken() {
   try {
-    const stored = await chrome.storage.local.get(['extensionToken', 'userId']);
-    if (stored.extensionToken) {
-      const response = await fetch(`${CONFIG.WEBSITE_API}/extension/verify`, {
-        headers: {
-          'Authorization': `Bearer ${stored.extensionToken}`
-        }
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        extensionToken = stored.extensionToken;
-        userId = stored.userId || data.userId;
-        isAuthenticated = true;
-        console.log('✅ Extension authenticated with website. User ID:', userId);
-      } else {
-        console.log('⚠️ Extension token invalid or expired');
-        extensionToken = null;
-        isAuthenticated = false;
-      }
+    const response = await fetch(`${CONFIG.WEBSITE_API}/health`);
+    
+    if (response.ok) {
+      const data = await response.json();
+      console.log('✅ Website backend is available. Status:', data.status);
+      isAuthenticated = true;
+    } else {
+      console.log('⚠️ Website backend not available');
+      isAuthenticated = false;
     }
   } catch (error) {
-    console.log('⚠️ Could not verify token (website may be offline):', error.message);
+    console.log('⚠️ Could not reach website backend (offline mode):', error.message);
+    isAuthenticated = false;
     // Continue with local fallback analysis
   }
   
@@ -487,13 +539,12 @@ async function analyzeURL(urlString, tabId, context = 'unknown') {
  */
 async function analyzeWithWebsite(urlString) {
   try {
-    const response = await fetch(`${CONFIG.WEBSITE_API}/scan/realtime`, {
+    const response = await fetch(`${CONFIG.WEBSITE_API}/scan`, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${extensionToken}`
+        'Content-Type': 'application/json'
       },
-      body: JSON.stringify({ url: urlString })
+      body: JSON.stringify({ url: urlString, source: 'extension' })
     });
 
     if (!response.ok) {
@@ -502,20 +553,20 @@ async function analyzeWithWebsite(urlString) {
     }
 
     const data = await response.json();
-    console.log('✅ Website API result:', data.verdict);
+    console.log('✅ Website API result:', data);
     
     // Transform website API response to extension format
     return {
-      verdict: data.verdict,
-      riskLevel: data.riskLevel || (data.verdict === 'BLOCK' ? 'HIGH' : 'SAFE'),
-      score: data.score || 0,
-      shouldBlock: data.verdict === 'BLOCK',
-      canBypass: data.verdict === 'WARN',
+      verdict: data.overallStatus === 'danger' ? 'BLOCK' : data.overallStatus === 'warning' ? 'WARN' : 'ALLOW',
+      riskLevel: data.overallStatus === 'danger' ? 'HIGH' : data.overallStatus === 'warning' ? 'MEDIUM' : 'SAFE',
+      score: data.percentage || 0,
+      shouldBlock: data.overallStatus === 'danger',
+      canBypass: data.overallStatus === 'warning',
       url: urlString,
-      reasoning: data.reasoning || 'Analyzed by website security system',
+      reasoning: `Security Score: ${data.percentage}% - ${data.overallStatus.toUpperCase()}`,
       source: 'WEBSITE_API',
       scanId: data.scanId,
-      timestamp: new Date().toISOString()
+      timestamp: data.timestamp
     };
   } catch (error) {
     console.log('⚠️ Website API unavailable:', error.message);
