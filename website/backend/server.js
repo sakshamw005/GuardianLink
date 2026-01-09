@@ -34,7 +34,33 @@ app.use(cors({
   },
   credentials: true
 }));
-app.use(express.json());
+// Capture raw body while validating initial JSON character to avoid consuming the stream twice
+app.use(express.json({
+  verify: (req, res, buf) => {
+    try { req.rawBody = buf.toString(); } catch (e) { req.rawBody = null; }
+    const trimmed = (req.rawBody || '').trimLeft();
+    if (trimmed && !trimmed.startsWith('{') && !trimmed.startsWith('[')) {
+      const err = new Error('Request body is not valid JSON (unexpected leading character)');
+      err.type = 'entity.parse.failed';
+      throw err;
+    }
+  }
+}));
+
+// Better JSON parse error responses (body-parser errors are surfaced here)
+app.use((err, req, res, next) => {
+  if (err && err.type === 'entity.parse.failed') {
+    console.warn('Invalid JSON body received:', err.message);
+    // Log raw body for debugging (avoid logging sensitive data in production)
+    console.warn('Raw body preview:', (req && req.rawBody) ? req.rawBody.slice(0, 1000) : '<<none>>');
+    return res.status(400).json({
+      error: 'INVALID_JSON',
+      message: 'Request body is not valid JSON',
+      details: err.message
+    });
+  }
+  next(err);
+});
 
 // Load rules (whitelist / blacklist) into memory
 try {
@@ -884,16 +910,34 @@ app.post('/api/scan', async (req, res) => {
   }
 
   // Quick DNS resolution check (A/AAAA) to avoid wasting API calls
+  let dnsResolved = true;
+  let preflightWhois = null;
   try {
     await dns.lookup(hostname);
   } catch (err) {
-    return res.status(404).json({
-      error: 'DNS_PROBE_POSSIBLE',
-      message: "This site can’t be reached",
-      details: `${hostname}'s DNS address could not be found. Diagnosing the problem.`,
-      uiHint: 'DNS_NOT_FOUND',
-      overallStatus: 'danger'
-    });
+    dnsResolved = false;
+    console.warn(`DNS lookup failed for ${hostname}; attempting WHOIS lookup to verify registration...`);
+    try {
+      preflightWhois = await fetchWhois(url);
+    } catch (whoisErr) {
+      console.warn('WHOIS lookup failed during DNS fallback:', whoisErr && whoisErr.message ? whoisErr.message : whoisErr);
+      preflightWhois = null;
+    }
+
+    // If WHOIS is not available or does not indicate a registered domain, short-circuit with 404
+    const whoisConfirms = preflightWhois && preflightWhois.available && preflightWhois.createdDate;
+    if (!whoisConfirms) {
+      return res.status(404).json({
+        error: 'DNS_PROBE_POSSIBLE',
+        message: "This site can’t be reached",
+        details: `${hostname}'s DNS address could not be found. WHOIS lookup did not confirm registration.`,
+        uiHint: 'DNS_NOT_FOUND',
+        whois: preflightWhois,
+        overallStatus: 'danger'
+      });
+    }
+
+    console.log(`WHOIS indicates ${hostname} is registered; proceeding with a limited scan (DNS unresolved).`);
   }
 
   // Phase 1: Whitelist check (fast)
@@ -956,40 +1000,71 @@ app.post('/api/scan', async (req, res) => {
   };
   
 try {
-  const [
-    virusTotal,
-    abuseIPDB,
-    ssl,
-    domainAge,
-    content,
-    redirects,
-    securityHeaders,
-    whois,
-    googleSafeBrowsing
-  ] = await Promise.all([
-    scanWithVirusTotal(url),
-    checkWithAbuseIPDB(url),
-    checkSSL(url),
-    checkDomainAge(url),
-    analyzeContent(url),
-    analyzeRedirects(url),
-    checkSecurityHeaders(url),
-    fetchWhois(url),
-    checkWithGoogleSafeBrowsing(url)
-  ]);
+    // If DNS resolved, run full checks in parallel; otherwise run a conservative set and mark skipped phases
+    let virusTotal, abuseIPDB, ssl, domainAge, content, redirects, securityHeaders, whois, googleSafeBrowsing;
+    if (dnsResolved) {
+      [
+        virusTotal,
+        abuseIPDB,
+        ssl,
+        domainAge,
+        content,
+        redirects,
+        securityHeaders,
+        whois,
+        googleSafeBrowsing
+      ] = await Promise.all([
+        scanWithVirusTotal(url),
+        checkWithAbuseIPDB(url),
+        checkSSL(url),
+        checkDomainAge(url),
+        analyzeContent(url),
+        analyzeRedirects(url),
+        checkSecurityHeaders(url),
+        fetchWhois(url),
+        checkWithGoogleSafeBrowsing(url)
+      ]);
 
-  results.phases = {
-    virusTotal: { name: 'VirusTotal Analysis', ...virusTotal },
-    abuseIPDB: { name: 'AbuseIPDB Check', ...abuseIPDB },
-    ssl: { name: 'SSL Certificate', ...ssl },
-    domainAge: { name: 'Domain Analysis', ...domainAge },
-    content: { name: 'Content Analysis', ...content },
-    redirects: { name: 'Redirect Analysis', ...redirects },
-    securityHeaders: { name: 'Security Headers', ...securityHeaders },
-    whois: { name: 'WHOIS Lookup', ...whois },
-    googleSafeBrowsing: { name: 'Google Safe Browsing', ...googleSafeBrowsing }
-  };
+      results.phases = {
+        virusTotal: { name: 'VirusTotal Analysis', ...virusTotal },
+        abuseIPDB: { name: 'AbuseIPDB Check', ...abuseIPDB },
+        ssl: { name: 'SSL Certificate', ...ssl },
+        domainAge: { name: 'Domain Analysis', ...domainAge },
+        content: { name: 'Content Analysis', ...content },
+        redirects: { name: 'Redirect Analysis', ...redirects },
+        securityHeaders: { name: 'Security Headers', ...securityHeaders },
+        whois: { name: 'WHOIS Lookup', ...whois },
+        googleSafeBrowsing: { name: 'Google Safe Browsing', ...googleSafeBrowsing }
+      };
+    } else {
+      // DNS failed but WHOIS confirmed registration (preflightWhois). Do a limited scan to save API calls.
+      whois = preflightWhois;
+      [virusTotal, googleSafeBrowsing, domainAge] = await Promise.all([
+        scanWithVirusTotal(url),
+        checkWithGoogleSafeBrowsing(url),
+        checkDomainAge(url)
+      ]);
 
+      abuseIPDB = { error: 'SKIPPED_DNS', score: 15, maxScore: 15, status: 'warning', reason: 'Skipped because DNS lookup failed' };
+      ssl = { error: 'SKIPPED_DNS', score: 0, maxScore: 15, status: 'danger', reason: 'Skipped because DNS lookup failed' };
+      content = { error: 'SKIPPED_DNS', score: 10, maxScore: 15, status: 'warning', findings: ['Content fetch skipped due to DNS lookup failure'] };
+      redirects = { redirectCount: 0, redirects: [], score: 10, maxScore: 10, status: 'warning', reason: 'Skipped because DNS lookup failed' };
+      securityHeaders = { error: 'SKIPPED_DNS', score: 0, maxScore: 10, status: 'warning', findings: ['Skipped because DNS lookup failed'] };
+
+      results.phases = {
+        virusTotal: { name: 'VirusTotal Analysis', ...virusTotal },
+        abuseIPDB: { name: 'AbuseIPDB Check', ...abuseIPDB },
+        ssl: { name: 'SSL Certificate', ...ssl },
+        domainAge: { name: 'Domain Analysis', ...domainAge },
+        content: { name: 'Content Analysis', ...content },
+        redirects: { name: 'Redirect Analysis', ...redirects },
+        securityHeaders: { name: 'Security Headers', ...securityHeaders },
+        whois: { name: 'WHOIS Lookup', ...whois },
+        googleSafeBrowsing: { name: 'Google Safe Browsing', ...googleSafeBrowsing }
+      };
+
+      results.skippedPhases = ['abuseIPDB', 'ssl', 'content', 'redirects', 'securityHeaders'];
+    }
   // Evaluate heuristics against the gathered context
   const domain = (() => {
     try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; }
@@ -1249,6 +1324,17 @@ app.post('/api/rules/reload', (req, res) => {
   } catch (err) {
     res.status(500).json({ status: 'error', error: err.message });
   }
+});
+
+// Global error handler — return JSON instead of HTML so clients always get machine-readable errors
+app.use((err, req, res, next) => {
+  console.error('Unhandled error:', err && (err.stack || err));
+  if (res.headersSent) return next(err);
+  const status = err && err.status ? err.status : 500;
+  res.status(status).json({
+    error: err && err.code ? err.code : 'INTERNAL_SERVER_ERROR',
+    message: err && err.message ? err.message : 'An internal server error occurred'
+  });
 });
 
 app.listen(PORT, () => {
