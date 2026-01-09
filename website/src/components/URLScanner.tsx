@@ -66,7 +66,11 @@ const SCAN_PHASES = [
   { key: "content", name: "Content Analysis", description: "Phishing indicator scan", maxScore: 15 },
   { key: "redirects", name: "Redirect Analysis", description: "Redirect chain inspection", maxScore: 10 },
   { key: "securityHeaders", name: "Security Headers", description: "Header configuration check", maxScore: 10 },
+  { key: "whois", name: "WHOIS Lookup", description: "Domain registration intelligence", maxScore: 10 },
+  { key: "googleSafeBrowsing", name: "Google Safe Browsing", description: "Google threat intelligence", maxScore: 15 },
+  { key: "heuristics", name: "Heuristic Rules", description: "Behavioral & structural analysis", maxScore: 25 },
 ];
+
 
 // Default to localhost, but can be configured
 const BACKEND_URL = "http://localhost:3001";
@@ -133,20 +137,37 @@ export function URLScanner() {
     try {
       // Start phase animation and API call in parallel
       const [scanResponse] = await Promise.all([
-        fetch(`${BACKEND_URL}/api/scan`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ url }),
-        }).then(res => {
-          if (!res.ok) {
-            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          }
-          return res.json() as Promise<ScanResponse>;
-        }),
-        phaseAnimation(),
-      ]);
+      fetch(`${BACKEND_URL}/api/scan`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ url }),
+      }).then(async (res) => {
+        const data = await res.json();
+
+        if (data.uiHint === "DNS_NOT_FOUND") {
+          setError(
+            `This site can’t be reached\n\n${data.details}\n\n${data.error}`
+          );
+          setScanning(false);
+          setScanComplete(false);
+          setCurrentPhase(-1);
+          return null;
+        }
+
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        return data as ScanResponse;
+      }),
+      phaseAnimation(),
+    ]);
+
+    if (!scanResponse) {
+      return;
+    }
 
       // Process results
       const newResults: ScanResult[] = SCAN_PHASES.map(phase => {
@@ -167,8 +188,8 @@ export function URLScanner() {
         return {
           phase: phase.name,
           status,
-          score: phaseResult.score,
-          maxScore: phaseResult.maxScore,
+          score: phaseResult.score ?? 0,
+          maxScore: phaseResult.maxScore ?? phase.maxScore,
         };
       });
 
@@ -238,7 +259,7 @@ export function URLScanner() {
             <Input
               variant="url"
               type="url"
-              placeholder="Enter URL to scan (e.g., https://example.com)"
+              placeholder="Enter URL to scan"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               disabled={scanning}
@@ -300,7 +321,7 @@ export function URLScanner() {
 
       {/* Results Section */}
       <AnimatePresence>
-        {(scanning || scanComplete) && (
+        {!error && (scanning || scanComplete) && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}

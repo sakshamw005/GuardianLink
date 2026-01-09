@@ -2,59 +2,15 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
-const path = require('path');
 const rulesManager = require('./lib/rulesManager');
-const jwt = require('jsonwebtoken');
-const sqlite3 = require('sqlite3').verbose();
 const crypto = require('crypto');
+const scansStore = new Map(); // scanId -> { id, userId, url, status, scan_result, created_at }
+const extensionSessions = new Map(); // extensionToken -> { sessionId, deviceInfo, createdAt }
 const heuristicsManager = require('./lib/heuristicsManager');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
 
-// ========== DATABASE SETUP ==========
-const db = new sqlite3.Database(process.env.DATABASE_URL || './guardianlink.db');
-
-// Initialize database tables
-db.serialize(() => {
-  // Drop old scans table if it exists with wrong schema
-  db.run(`DROP TABLE IF EXISTS scans`, (err) => {
-    if (err) console.log('Note: scans table did not exist');
-  });
-  
-  // Users table
-  db.run(`CREATE TABLE IF NOT EXISTS users (
-    id TEXT PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    username TEXT UNIQUE NOT NULL,
-    password_hash TEXT NOT NULL,
-    extension_token TEXT UNIQUE,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    last_login DATETIME
-  )`);
-
-  // Scan history - user_id can be NULL for public scans
-  db.run(`CREATE TABLE IF NOT EXISTS scans (
-    id TEXT PRIMARY KEY,
-    user_id TEXT,
-    url TEXT NOT NULL,
-    scan_result TEXT,
-    status TEXT DEFAULT 'pending',
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-  )`);
-
-  // Extension sessions (for real-time sync) - user_id can be NULL for public extension usage
-  db.run(`CREATE TABLE IF NOT EXISTS extension_sessions (
-    id TEXT PRIMARY KEY,
-    user_id TEXT,
-    extension_token TEXT UNIQUE,
-    device_info TEXT,
-    last_activity DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY(user_id) REFERENCES users(id)
-  )`);
-});
 
 // ========== MIDDLEWARE ==========
 const allowedOrigins = [
@@ -105,40 +61,18 @@ const limiter = rateLimit({
 });
 app.use('/api/', limiter);
 
-// Extension token verification (keep for extension)
+// Extension token verification (in-memory)
 function verifyExtensionToken(req, res, next) {
   const token = req.headers['x-extension-token'];
-  
-  if (!token) {
-    return res.status(401).json({ error: 'No extension token' });
-  }
-  
-  db.get('SELECT user_id FROM extension_sessions WHERE extension_token = ?', [token], (err, row) => {
-    if (err || !row) {
-      return res.status(401).json({ error: 'Invalid extension token' });
-    }
-    req.userId = row.user_id;
-    next();
-  });
+  if (!token) return res.status(401).json({ error: 'No extension token' });
+  const session = extensionSessions.get(token);
+  if (!session) return res.status(401).json({ error: 'Invalid extension token' });
+  req.session = session;
+  next();
 }
 
-// ========== AUTHENTICATION ENDPOINTS ==========
-
-// Register user
-// ========== HEALTH CHECK ==========
-
-// Health check endpoint for frontend
-app.get('/api/health', (req, res) => {
-  res.json({
-    status: 'ok',
-    timestamp: new Date().toISOString(),
-    version: '2.0',
-    components: {
-      database: 'connected',
-      cache: 'enabled'
-    }
-  });
-});
+// Authentication removed (no DB/JWT or user registration in this build)
+// Health check (detailed version appears later in the file) -- previously used DB; removed duplicate.
 
 // ========== EXTENSION ENDPOINTS ==========
 
@@ -148,37 +82,27 @@ app.post('/api/extension/register', (req, res) => {
   const sessionId = crypto.randomUUID();
   const { deviceInfo } = req.body;
   
-  // No user required - extension can register without authentication
-  db.run(
-    'INSERT INTO extension_sessions (id, user_id, extension_token, device_info, last_activity) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)',
-    [sessionId, null, extensionToken, JSON.stringify(deviceInfo)],
-    (err) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to register extension' });
-      }
-      
-      res.json({
-        extensionToken,
-        sessionId,
-        message: 'Extension registered successfully'
-      });
-    }
-  );
+  // Store in-memory (no DB)
+  extensionSessions.set(extensionToken, {
+    sessionId,
+    deviceInfo: deviceInfo || null,
+    createdAt: new Date().toISOString()
+  });
+
+  res.json({
+    extensionToken,
+    sessionId,
+    message: 'Extension registered successfully'
+  });
 });
 
-// Verify extension is connected to user
+// Verify extension is connected (returns session info)
 app.get('/api/extension/verify', verifyExtensionToken, (req, res) => {
-  db.get('SELECT email, username FROM users WHERE id = ?', [req.userId], (err, row) => {
-    if (err || !row) {
-      return res.status(401).json({ error: 'User not found' });
-    }
-    
-    res.json({
-      authenticated: true,
-      userId: req.userId,
-      email: row.email,
-      username: row.username
-    });
+  const session = req.session;
+  res.json({
+    authenticated: true,
+    sessionId: session.sessionId,
+    deviceInfo: session.deviceInfo
   });
 });
 
@@ -553,18 +477,35 @@ async function checkDomainAge(url) {
 // WHOIS lookup (optional -- requires WHOIS_API_KEY in .env)
 async function fetchWhois(url) {
   const apiKey = process.env.WHOIS_API_KEY;
+
+  if (!apiKey) {
+    return {
+      available: false,
+      score: 0,
+      maxScore: 10,
+      status: 'warning',
+      reason: 'WHOIS API key not configured'
+    };
+  }
+
   try {
     const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
     const domain = urlObj.hostname;
-    if (!apiKey) return { error: 'WHOIS API key not configured' };
 
     const whoisUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?domainName=${encodeURIComponent(domain)}&apiKey=${apiKey}&outputFormat=JSON`;
-    const res = await fetch(whoisUrl, { timeout: 10000 });
+
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 10000);
+
+    const res = await fetch(whoisUrl, { signal: controller.signal });
+    clearTimeout(timer);
+
     const data = await res.json();
 
     const parsed = data.WhoisRecord || {};
     const parsedDates = parsed.registryDataParsed || parsed.registryData || {};
     const created = parsedDates.createdDateNormalized || parsed.createdDate || null;
+
     let createdTs = null;
     if (created) {
       const d = new Date(created);
@@ -572,14 +513,23 @@ async function fetchWhois(url) {
     }
 
     return {
+      available: true,
       domain,
-      raw: data,
       createdDate: created,
-      createdDateTimestamp: createdTs
+      score: createdTs ? 10 : 5,
+      maxScore: 10,
+      status: createdTs ? 'safe' : 'warning'
     };
+
   } catch (error) {
     console.error('WHOIS error:', error.message);
-    return { error: error.message };
+    return {
+      available: false,
+      score: 0,
+      maxScore: 10,
+      status: 'warning',
+      reason: 'WHOIS lookup failed or timed out'
+    };
   }
 }
 
@@ -612,7 +562,13 @@ async function analyzeContent(url) {
       'sign in',
       'username',
       'password',
-      'bank'
+      'bank',
+      'urgent',
+      'FIR',
+      'legal action',
+      'limited time',
+      'security alert',
+      'account locked'
     ];
 
     for (const keyword of phishingKeywords) {
@@ -712,7 +668,7 @@ async function checkWithGoogleSafeBrowsing(url) {
         },
         threatInfo: {
           threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
-          platformTypes: ['WINDOWS', 'LINUX', 'MAC', 'ALL_PLATFORMS'],
+          platformTypes: ['ALL_PLATFORMS'],
           threatEntries: [
             { url: url }
           ]
@@ -725,7 +681,7 @@ async function checkWithGoogleSafeBrowsing(url) {
     if (data.error) {
       const errorMsg = data.error.message || JSON.stringify(data.error);
       if (errorMsg.includes('API key') || errorMsg.includes('INVALID_ARGUMENT') || errorMsg.includes('Invalid')) {
-        console.error('❌ Google Safe Browsing API key error:', errorMsg);
+        console.error('Google Safe Browsing API key error:', errorMsg);
         return { 
           error: 'Invalid or expired API key', 
           score: 10, 
@@ -908,7 +864,7 @@ async function checkSecurityHeaders(url) {
   }
 }
 
-// Main scan endpoint (with user auth)
+// Main scan endpoint
 app.post('/api/scan', async (req, res) => {
   const { url, source } = req.body;
   
@@ -916,8 +872,33 @@ app.post('/api/scan', async (req, res) => {
     return res.status(400).json({ error: 'URL is required' });
   }
 
+  // Phase 0: Domain existence check
+  const dns = require('dns').promises;
+  let hostname;
+
+  // Validate URL and extract hostname
+  try {
+    hostname = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+  } catch (err) {
+    return res.status(400).json({ error: 'Invalid URL', message: 'Provided URL is not a valid URL' });
+  }
+
+  // Quick DNS resolution check (A/AAAA) to avoid wasting API calls
+  try {
+    await dns.lookup(hostname);
+  } catch (err) {
+    return res.status(404).json({
+      error: 'DNS_PROBE_POSSIBLE',
+      message: "This site can’t be reached",
+      details: `${hostname}'s DNS address could not be found. Diagnosing the problem.`,
+      uiHint: 'DNS_NOT_FOUND',
+      overallStatus: 'danger'
+    });
+  }
+
   // Phase 1: Whitelist check (fast)
   const whitelistMatch = rulesManager.isWhitelisted(url);
+
   if (whitelistMatch) {
     console.log(`Whitelist hit for ${url} (source: ${whitelistMatch.source || 'local'}) - skipping checks`);
     const results = {
@@ -956,14 +937,15 @@ app.post('/api/scan', async (req, res) => {
   
   console.log(`\n🔍 Scan ${scanId} started for: ${url} (from ${source || 'website'})`);
   
-  // Store scan as pending (no user_id - public access)
-  db.run(
-    'INSERT INTO scans (id, user_id, url, status) VALUES (?, ?, ?, ?)',
-    [scanId, null, url, 'pending'],
-    (err) => {
-      if (err) console.error('Failed to log scan:', err);
-    }
-  );
+  // Store scan as pending (in-memory)
+  scansStore.set(scanId, {
+    id: scanId,
+    userId: null,
+    url,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    source: source || 'website'
+  });
   
   const results = {
     scanId,
@@ -1008,20 +990,72 @@ try {
     googleSafeBrowsing: { name: 'Google Safe Browsing', ...googleSafeBrowsing }
   };
 
-  
-  // Add WHOIS data (if available)
-  results.phases.whois = { name: 'WHOIS Lookup', ...whois };
-
   // Evaluate heuristics against the gathered context
-  const heuristicsResult = heuristicsManager.evaluate(url, {
+  const domain = (() => {
+    try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; }
+    catch { return url; }
+  })();
+
+  const heuristicContext = {
+    domain,
     ssl,
     content,
-    abuseIPDB,
+    whois,
     redirects,
     securityHeaders,
-    whois,
-    domain: (() => { try { return new URL(url).hostname; } catch { return url; } })()
-  });
+    abuseIPDB,
+
+    country: abuseIPDB?.countryCode?.toLowerCase(),
+    asn_abuse_score: abuseIPDB?.abuseConfidenceScore,
+    asn_bulletproof: abuseIPDB?.isBulletproof === true,
+    
+
+    redirect_count: redirects?.redirectCount ?? 0,
+    redirect_to_ip: (redirects?.redirects || []).some(r => {
+      try {
+        return /^\d{1,3}(\.\d{1,3}){3}$/.test(new URL(r.to).hostname);
+      } catch {
+        return false;
+      }
+    }),
+    redirect_via_shortener: (redirects?.redirects || []).some(r =>
+      /bit\.ly|tinyurl|t\.co|goo\.gl/i.test(r.to)
+    ),
+    redirect_cross_tld: (redirects?.redirects || []).some(r => {
+      try {
+        return new URL(r.from).hostname.split('.').pop() !==
+              new URL(r.to).hostname.split('.').pop();
+      } catch {
+        return false;
+      }
+    }),
+
+    password_field: (content?.findings || []).some(f =>
+      /password input/i.test(f)
+    ),
+    hidden_inputs: (content?.findings || []).some(f =>
+      /hidden input/i.test(f)
+    ),
+    external_form_action: (content?.findings || []).some(f =>
+      /External form submission/i.test(f)
+    ),
+    js_redirect: (content?.findings || []).some(f =>
+      /JavaScript redirect/i.test(f)
+    ),
+    meta_refresh: (content?.findings || []).some(f =>
+      /Meta refresh/i.test(f)
+    ),
+    login_form_detected: (content?.findings || []).some(f =>
+      /login|sign in/i.test(f)
+    ),
+
+    auto_download: (content?.findings || []).some(f =>
+      /automatic download/i.test(f)
+    ) ,
+    domain: (() => { try { return new URL(url).hostname; } catch { return url; } })() 
+  };
+
+  const heuristicsResult = heuristicsManager.evaluate(url, heuristicContext);
 
   results.phases.heuristics = { name: 'Heuristic Rules', ...heuristicsResult };
   
@@ -1048,65 +1082,41 @@ try {
     }
     
     // Store completed scan
-    db.run(
-      'UPDATE scans SET status = ?, scan_result = ? WHERE id = ?',
-      ['completed', JSON.stringify(results), scanId],
-      (err) => {
-        if (err) console.error('Failed to save scan result:', err);
-      }
-    );
+    const entry = scansStore.get(scanId) || {};
+    entry.status = 'completed';
+    entry.scan_result = results;
+    entry.completed_at = new Date().toISOString();
+    scansStore.set(scanId, entry);
     
     console.log(`✅ Scan complete. Score: ${results.percentage}% (${results.overallStatus})`);
     
     res.json(results);
   } catch (error) {
     console.error('Scan error:', error);
-    db.run('UPDATE scans SET status = ? WHERE id = ?', ['failed', scanId]);
+    const entry = scansStore.get(scanId) || {};
+    entry.status = 'failed';
+    entry.failed_at = new Date().toISOString();
+    scansStore.set(scanId, entry);
     res.status(500).json({ error: 'Scan failed', scanId });
   }
 });
 
-// Scan history for authenticated user
+// Public scan history (in-memory)
 app.get('/api/scans', (req, res) => {
-  const limit = req.query.limit || 50;
-  
-  db.all(
-    'SELECT id, url, status, created_at, scan_result FROM scans WHERE user_id = ? ORDER BY created_at DESC LIMIT ?',
-    [req.userId, limit],
-    (err, rows) => {
-      if (err) {
-        return res.status(500).json({ error: 'Failed to fetch scans' });
-      }
-      
-      // Parse JSON results
-      const scans = rows.map(row => ({
-        ...row,
-        scan_result: row.scan_result ? JSON.parse(row.scan_result) : null
-      }));
-      
-      res.json(scans);
-    }
-  );
+  const limit = Number(req.query.limit || 50);
+  const scans = Array.from(scansStore.values())
+    .sort((a,b) => new Date(b.created_at) - new Date(a.created_at))
+    .slice(0, limit)
+    .map(s => ({ id: s.id, url: s.url, status: s.status, created_at: s.created_at, scan_result: s.scan_result || null }));
+  res.json(scans);
 });
 
-// Get specific scan details
+// Get specific scan details (public)
 app.get('/api/scans/:scanId', (req, res) => {
   const { scanId } = req.params;
-  
-  db.get(
-    'SELECT id, url, status, created_at, scan_result FROM scans WHERE id = ? AND user_id = ?',
-    [scanId, req.userId],
-    (err, row) => {
-      if (err || !row) {
-        return res.status(404).json({ error: 'Scan not found' });
-      }
-      
-      res.json({
-        ...row,
-        scan_result: row.scan_result ? JSON.parse(row.scan_result) : null
-      });
-    }
-  );
+  const row = scansStore.get(scanId);
+  if (!row) return res.status(404).json({ error: 'Scan not found' });
+  res.json({ ...row, scan_result: row.scan_result || null });
 });
 
 // Real-time scan endpoint (from extension)
@@ -1116,19 +1126,41 @@ app.post('/api/scan/realtime', verifyExtensionToken, async (req, res) => {
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
-  
+
+  // Validate URL and DNS before doing any work
+  const dns = require('dns').promises;
+  let hostname;
+  try {
+    hostname = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+  } catch (err) {
+    return res.status(400).json({ error: 'Invalid URL', message: 'Provided URL is not a valid URL' });
+  }
+
+  try {
+    await dns.lookup(hostname);
+  } catch (err) {
+    return res.status(404).json({
+      error: 'DNS_PROBE_POSSIBLE',
+      message: "This site can’t be reached",
+      details: `${hostname}'s DNS address could not be found. Diagnosing the problem.`,
+      uiHint: 'DNS_NOT_FOUND',
+      overallStatus: 'danger'
+    });
+  }
+
   const scanId = crypto.randomUUID();
   
   console.log(`\n🔍 Extension scan ${scanId} for: ${url}`);
   
-  // Store extension scan
-  db.run(
-    'INSERT INTO scans (id, user_id, url, status) VALUES (?, ?, ?, ?)',
-    [scanId, req.userId, url, 'pending'],
-    (err) => {
-      if (err) console.error('Failed to log extension scan:', err);
-    }
-  );
+  // Store extension scan (in-memory)
+  scansStore.set(scanId, {
+    id: scanId,
+    userId: null,
+    url,
+    status: 'pending',
+    created_at: new Date().toISOString(),
+    source: 'extension'
+  });
   
   const results = {
     scanId,
@@ -1152,9 +1184,6 @@ app.post('/api/scan/realtime', verifyExtensionToken, async (req, res) => {
     results.virusTotal = virusTotal.status === 'fulfilled' ? virusTotal.value : { error: 'Timeout' };
     results.abuseIPDB = abuseIPDB.status === 'fulfilled' ? abuseIPDB.value : { error: 'Timeout' };
     
-    // Calculate quick risk score
-    let riskScore = 50; // Neutral
-    
     if (results.virusTotal.malicious > 0) riskScore -= 25;
     if (results.virusTotal.suspicious > 0) riskScore -= 10;
     if (results.abuseIPDB.abuseConfidenceScore > 50) riskScore -= 15;
@@ -1163,18 +1192,19 @@ app.post('/api/scan/realtime', verifyExtensionToken, async (req, res) => {
     results.verdict = riskScore < 30 ? 'BLOCK' : riskScore < 60 ? 'WARN' : 'ALLOW';
     
     // Store result
-    db.run(
-      'UPDATE scans SET status = ?, scan_result = ? WHERE id = ?',
-      ['completed', JSON.stringify(results), scanId],
-      (err) => {
-        if (err) console.error('Failed to save extension scan:', err);
-      }
-    );
+    const entry = scansStore.get(scanId) || {};
+    entry.status = 'completed';
+    entry.scan_result = results;
+    entry.completed_at = new Date().toISOString();
+    scansStore.set(scanId, entry);
     
     res.json(results);
   } catch (error) {
     console.error('Extension scan error:', error);
-    db.run('UPDATE scans SET status = ? WHERE id = ?', ['failed', scanId]);
+    const entry = scansStore.get(scanId) || {};
+    entry.status = 'failed';
+    entry.failed_at = new Date().toISOString();
+    scansStore.set(scanId, entry);
     res.status(500).json({ error: 'Scan failed', scanId, verdict: 'ALLOW' });
   }
 });
@@ -1188,7 +1218,6 @@ app.get('/api/health', (req, res) => {
     hasAbuseIPDBKey: !!process.env.ABUSEIPDB_API_KEY,
     hasWhoisKey: !!process.env.WHOIS_API_KEY,
     rulesCount: rulesManager.count(),
-    database: 'connected',
     heuristicsCount: (heuristicsManager.getAll().rules || []).length
   });
 });
@@ -1231,8 +1260,7 @@ app.listen(PORT, () => {
 ║   Server running on: http://localhost:${PORT}               ║
 ║                                                           ║
 ║   Endpoints:                                              ║
-║   - POST /api/auth/register          - Register user      ║
-║   - POST /api/auth/login             - Login              ║
+║   - (auth endpoints removed)                          ║
 ║   - POST /api/extension/register     - Register extension ║
 ║   - GET  /api/extension/verify       - Verify connection  ║
 ║   - POST /api/scan                   - Scan URL (website) ║
@@ -1246,7 +1274,6 @@ app.listen(PORT, () => {
   console.log('API Keys configured:');
   console.log(`  VirusTotal: ${process.env.VIRUSTOTAL_API_KEY ? '✓' : '✗'}`);
   console.log(`  AbuseIPDB:  ${process.env.ABUSEIPDB_API_KEY ? '✓' : '✗'}`);
-  console.log('  JWT Auth:   ✓');
-  console.log('  Database:   ✓');
-  console.log('');
+  console.log('  Google Safe Browsing:', process.env.GOOGLE_SAFE_BROWSING_API_KEY ? '✓' : '✗');
+  console.log(`  WHOIS:      ${process.env.WHOIS_API_KEY ? '✓' : '✗'}`);
 });

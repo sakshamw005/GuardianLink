@@ -46,9 +46,17 @@ function _isIp(hostname) {
 }
 
 function evaluate(url, context = {}) {
+  const normalizedUrl = (() => {
+    try {
+      return url.startsWith('http') ? url : `https://${url}`;
+    } catch {
+      return url;
+    }
+  })();
+
   // context may include: ssl, content, abuseIPDB, redirects, securityHeaders, whois
   const urlObj = (() => {
-    try { return new URL(url); } catch { return null; }
+    try { return new URL(normalizedUrl); } catch { return null; }
   })();
   const hostname = urlObj ? urlObj.hostname : (url || '');
   const pathAndQuery = urlObj ? (urlObj.pathname + (urlObj.search || '')) : '';
@@ -115,7 +123,12 @@ function evaluate(url, context = {}) {
         if (levenshtein(sld, b) <= 1 && sld !== b) { matchedRule = true; break; }
       }
     }
-
+    if (c.country_in) {
+      const country = context.country;
+      if (country && c.country_in.includes(country)) {
+        matchedRule = true;
+      }
+    }
     // SSL checks
     if (c.https === false) {
       if (!urlObj || urlObj.protocol !== 'https:') matchedRule = true;
@@ -133,10 +146,6 @@ function evaluate(url, context = {}) {
       const ssl = context.ssl;
       if (ssl && ssl.issuer && ssl.issuer.toLowerCase().includes('self')) matchedRule = true;
     }
-    if (c.ssl_domain_mismatch) {
-      const ssl = context.ssl;
-      if (ssl && ssl.issuer && context.domain && ssl.issuer !== context.domain) matchedRule = true; // best-effort
-    }
 
     // ASN / network
     if (c.asn_abuse_score_gt != null) {
@@ -153,8 +162,18 @@ function evaluate(url, context = {}) {
     // Page behaviour
     if (c.login_form_detected) {
       const content = context.content;
-      if (content && (content.findings || []).some(f => /login|password|sign in/i.test(f))) matchedRule = true;
+      const hasPasswordField = content && (content.findings || []).some(f =>
+        /password input detected/i.test(f)
+      );
+      const externalForm = content && (content.findings || []).some(f =>
+        /External form submission/i.test(f)
+      );
+
+      if (hasPasswordField && externalForm) {
+        matchedRule = true;
+      }
     }
+
     if (c.password_field && c.brand_match) {
       const content = context.content;
       const hasPassword = content && (content.findings || []).some(f => /password/i.test(f));
@@ -184,8 +203,12 @@ function evaluate(url, context = {}) {
   const score = Math.max(0, Math.round(maxScore - cappedSuspicion));
 
   let status = 'safe';
-  if (totalSuspicion >= 30) status = 'danger';
-  else if (totalSuspicion >= 10) status = 'warning';
+  if (cappedSuspicion >= 20) status = 'danger';
+  else if (cappedSuspicion >= 10) status = 'warning';
+  console.log("HEURISTICS DEBUG:", {
+    totalSuspicion,
+    matched
+  });
 
   return {
     matched,

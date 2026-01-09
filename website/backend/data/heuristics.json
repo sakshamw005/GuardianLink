@@ -61,9 +61,9 @@
     {
       "id": "brand:exact_match",
       "category": "brand",
-      "description": "Domain contains known brand name",
+      "description": "Brand name present outside official domain",
       "condition": { "brand_match": true },
-      "score": 25
+      "score": 10
     },
     {
       "id": "brand:hyphenated",
@@ -82,9 +82,9 @@
     {
       "id": "ssl:no_https",
       "category": "ssl",
-      "description": "URL does not use HTTPS",
+      "description": "URL explicitly uses HTTP (not HTTPS)",
       "condition": { "https": false },
-      "score": 30
+      "score": 10
     },
     {
       "id": "ssl:cert_age_lt_7d",
@@ -99,13 +99,6 @@
       "description": "Self-signed SSL certificate",
       "condition": { "ssl_self_signed": true },
       "score": 20
-    },
-    {
-      "id": "ssl:domain_mismatch",
-      "category": "ssl",
-      "description": "Certificate domain does not match URL",
-      "condition": { "ssl_domain_mismatch": true },
-      "score": 30
     },
     {
       "id": "asn:high_abuse",
@@ -148,6 +141,365 @@
       "description": "Form submits data to external domain",
       "condition": { "external_form_action": true },
       "score": 20
+    },
+    {
+      "id": "url:many_subdomains",
+      "category": "url",
+      "description": "Excessive number of subdomains",
+      "condition": { "subdomain_count_gt": 4 },
+      "score": 10
+    },
+    {
+      "id": "url:double_extension",
+      "category": "url",
+      "description": "URL path contains double file extension",
+      "condition": { "double_extension": true },
+      "score": 15
+    },
+    {
+      "id": "url:at_symbol",
+      "category": "url",
+      "description": "URL contains @ symbol",
+      "condition": { "url_contains_at": true },
+      "score": 15
+    },
+    {
+      "id": "domain:recent_ns_change",
+      "category": "domain",
+      "description": "Recent nameserver change",
+      "condition": { "ns_changed_recently": true },
+      "score": 15
+    },
+    {
+      "id": "domain:free_dns_provider",
+      "category": "domain",
+      "description": "Uses free DNS provider",
+      "condition": { "dns_provider_in": ["duckdns.org", "no-ip.com", "dynu.net"] },
+      "score": 15
+    },
+    {
+      "id": "domain:dga_like",
+      "category": "domain",
+      "description": "Domain resembles algorithmically generated name",
+      "condition": { "dga_score_gt": 0.8 },
+      "score": 20
+    },
+    {
+      "id": "page:hidden_inputs",
+      "category": "behavior",
+      "description": "Hidden input fields detected",
+      "condition": { "hidden_inputs": true },
+      "score": 10
+    },
+    {
+      "id": "page:credential_keywords",
+      "category": "behavior",
+      "description": "Credential harvesting language detected",
+      "condition": { "content_keywords_any": ["verify your account", "confirm identity", "secure your account"] },
+      "score": 15
+    },
+    {
+      "id": "page:auto_download",
+      "category": "behavior",
+      "description": "Automatic file download triggered",
+      "condition": { "auto_download": true },
+      "score": 25
+    } ,
+    {
+      "id": "page:obfuscated_js",
+      "category": "behavior",
+      "description": "Heavily obfuscated JavaScript detected",
+      "condition": { "js_obfuscation_score_gt": 0.7 },
+      "score": 20
+    } ,
+    {
+      "id": "redirect:long_chain",
+      "category": "redirect",
+      "description": "Excessive number of redirects before landing page",
+      "condition": { "redirect_count_gt": 4 },
+      "score": 15
+    } ,
+    {
+      "id": "redirect:url_shortener",
+      "category": "redirect",
+      "description": "Redirect passes through URL shortener",
+      "condition": { "redirect_via_shortener": true },
+      "score": 15
+    } ,
+    {
+      "id": "redirect:to_ip",
+      "category": "redirect",
+      "description": "Redirects to raw IP address",
+      "condition": { "redirect_to_ip": true },
+      "score": 20
+    } ,
+    {
+      "id": "redirect:tld_switch",
+      "category": "redirect",
+      "description": "Redirect crosses unrelated TLDs",
+      "condition": { "redirect_cross_tld": true },
+      "score": 10
+    } ,
+    {
+      "id": "redirect:geo_mismatch",
+      "category": "redirect",
+      "description": "Redirects to hosting in unrelated country",
+      "condition": { "redirect_country_mismatch": true },
+      "score": 15
+    } ,
+    {
+      "id": "redirect:meta_refresh",
+      "category": "redirect",
+      "description": "Uses meta refresh redirect",
+      "condition": { "meta_refresh": true },
+      "score": 10
+    } ,
+    {
+      "id": "redirect:js_only",
+      "category": "redirect",
+      "description": "Redirect performed only via JavaScript",
+      "condition": { "js_redirect": true },
+      "score": 10
+    } ,
+    {
+      "id": "redirect:loop",
+      "category": "redirect",
+      "description": "Redirect loop detected",
+      "condition": { "redirect_loop": true },
+      "score": 10
+    } ,
+    {
+      "id": "redirect:delayed",
+      "category": "redirect",
+      "description": "Redirect occurs after delay",
+      "condition": { "delayed_redirect": true },
+      "score": 10
+    } ,
+    {
+      "id": "redirect:https_to_http",
+      "category": "redirect",
+      "description": "Redirect downgrades from HTTPS to HTTP",
+      "condition": { "https_to_http_redirect": true },
+      "score": 15
+    } ,
+    {
+      "id": "network:bulletproof_asn",
+      "category": "network",
+      "description": "Hosted on known bulletproof ASN",
+      "condition": { "asn_bulletproof": true },
+      "score": 25
+    } ,
+    {
+      "id": "network:high_abuse_score",
+      "category": "network",
+      "description": "IP has high abuse confidence score",
+      "condition": { "asn_abuse_score_gt": 50 },
+      "score": 15
+    } ,
+    {
+      "id": "network:new_ip_range",
+      "category": "network",
+      "description": "IP belongs to recently allocated range",
+      "condition": { "ip_age_days_lt": 90 },
+      "score": 10
+    } ,
+    {
+      "id": "network:brand_host_mismatch",
+      "category": "network",
+      "description": "Brand site hosted on generic cloud provider",
+      "condition": { "brand_hosting_mismatch": true },
+      "score": 15
+    } ,
+    {
+      "id": "network:free_hosting",
+      "category": "network",
+      "description": "Uses free or shared hosting provider",
+      "condition": { "hosting_type": "free" },
+      "score": 10
+    } ,
+    {
+      "id": "geo:high_risk_country",
+      "category": "geo",
+      "description": "Hosted in high-risk country",
+      "condition": { "country_in": ["ru", "kp", "ir", "cn" , "pk"] },
+      "score": 25
+    } ,
+    {
+      "id": "geo:india_enemy_country",
+      "category": "geo",
+      "description": "Domain hosted in geopolitically sensitive country for India",
+      "condition": {
+        "country_in": ["pk"]
+      },
+      "score": 5
+    } ,
+    {
+      "id": "geo:language_mismatch",
+      "category": "geo",
+      "description": "Page language mismatches hosting country",
+      "condition": { "language_country_mismatch": true },
+      "score": 10
+    } ,
+    {
+      "id": "network:shared_ip_many_domains",
+      "category": "network",
+      "description": "IP hosts unusually high number of domains",
+      "condition": { "domains_on_ip_gt": 120 },
+      "score": 10
+    } ,
+    {
+      "id": "network:no_reverse_dns",
+      "category": "network",
+      "description": "IP has no reverse DNS record",
+      "condition": { "no_ptr_record": true },
+      "score": 10
+    } ,
+    {
+      "id": "network:cdn_login_page",
+      "category": "network",
+      "description": "Login page served via generic CDN",
+      "condition": { "cdn_serving_login": true },
+      "score": 10
+    } ,
+    {
+      "id": "brand:login_on_non_brand_domain",
+      "category": "brand",
+      "description": "Login page hosted on domain unrelated to claimed brand",
+      "condition": { "brand_login_mismatch": true },
+      "score": 20
+    },
+    {
+      "id": "brand:typosquat_with_login",
+      "category": "brand",
+      "description": "Typosquatted brand domain combined with login page",
+      "condition": { "brand_typosquat": true, "login_form_detected": true },
+      "score": 25
+    },
+    {
+      "id": "brand:homoglyph_attack",
+      "category": "brand",
+      "description": "Domain uses Unicode homoglyph characters",
+      "condition": { "homoglyph_domain": true },
+      "score": 20
+    },
+    {
+      "id": "brand:excessive_brand_keywords",
+      "category": "brand",
+      "description": "Excessive brand keyword usage in URL or page",
+      "condition": { "brand_keyword_count_gt": 3 },
+      "score": 15
+    },
+    {
+      "id": "page:credential_harvest_combo",
+      "category": "behavior",
+      "description": "Password field with external submission endpoint",
+      "condition": { "password_field": true, "external_form_action": true },
+      "score": 25
+    },
+    {
+      "id": "page:fake_security_claims",
+      "category": "behavior",
+      "description": "Page claims false security or urgency",
+      "condition": { "content_keywords_any": ["secure immediately", "account compromised", "verify now"] },
+      "score": 15
+    },
+    {
+      "id": "page:copy_of_known_brand",
+      "category": "behavior",
+      "description": "HTML structure resembles known brand login page",
+      "condition": { "brand_html_fingerprint_match": true },
+      "score": 20
+    },
+    {
+      "id": "page:captcha_abuse",
+      "category": "behavior",
+      "description": "Fake CAPTCHA used to lure interaction",
+      "condition": { "fake_captcha_detected": true },
+      "score": 15
+    },
+    {
+      "id": "malware:auto_file_download",
+      "category": "malware",
+      "description": "Automatic file download triggered",
+      "condition": { "auto_download": true },
+      "score": 25
+    },
+    {
+      "id": "malware:archive_delivery",
+      "category": "malware",
+      "description": "Delivers executable via archive file",
+      "condition": { "download_type_in": ["zip", "rar", "iso"] },
+      "score": 20
+    },
+    {
+      "id": "malware:script_dropper",
+      "category": "malware",
+      "description": "JavaScript attempts to drop executable payload",
+      "condition": { "script_dropper": true },
+      "score": 25
+    },
+    {
+      "id": "malware:double_extension_download",
+      "category": "malware",
+      "description": "Downloaded file uses double extension",
+      "condition": { "double_extension": true },
+      "score": 20
+    },
+    {
+      "id": "evasion:cloaking_user_agent",
+      "category": "evasion",
+      "description": "Content changes based on user-agent",
+      "condition": { "ua_cloaking": true },
+      "score": 20
+    },
+    {
+      "id": "evasion:cloaking_geo",
+      "category": "evasion",
+      "description": "Different content served by geo-location",
+      "condition": { "geo_cloaking": true },
+      "score": 20
+    },
+    {
+      "id": "evasion:anti_analysis_scripts",
+      "category": "evasion",
+      "description": "Detects automation or debugging tools",
+      "condition": { "anti_debugging": true },
+      "score": 15
+    },
+    {
+      "id": "evasion:delayed_malicious_action",
+      "category": "evasion",
+      "description": "Malicious action delayed to evade scanners",
+      "condition": { "delayed_payload": true },
+      "score": 15
+    },
+    {
+      "id": "network:fast_flux_dns",
+      "category": "network",
+      "description": "Fast-flux DNS behavior detected",
+      "condition": { "fast_flux": true },
+      "score": 25
+    },
+    {
+      "id": "network:frequent_ip_rotation",
+      "category": "network",
+      "description": "Domain rapidly rotates IP addresses",
+      "condition": { "ip_rotation_rate_gt": 5 },
+      "score": 15
+    },
+    {
+      "id": "network:mx_record_missing",
+      "category": "network",
+      "description": "Domain lacks MX record but sends emails",
+      "condition": { "mx_missing": true },
+      "score": 10
+    },
+    {
+      "id": "network:suspicious_txt_records",
+      "category": "network",
+      "description": "Suspicious TXT or SPF records detected",
+      "condition": { "suspicious_txt": true },
+      "score": 10
     }
   ]
 }
