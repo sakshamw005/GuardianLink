@@ -665,100 +665,6 @@ async function analyzeContent(url) {
     return { error: error.message, score: 10, maxScore: 15, status: 'warning' };
   }
 }
-
-// Google Safe Browsing check
-async function checkWithGoogleSafeBrowsing(url) {
-  const apiKey = process.env.GOOGLE_SAFE_BROWSING_API_KEY;
-  
-  if (!apiKey) {
-    console.warn('⚠️ Google Safe Browsing API key not configured');
-    return { 
-      error: 'API key not configured', 
-      score: 10, 
-      maxScore: 15,
-      status: 'warning',
-      available: false 
-    };
-  }
-  
-  try {
-    const response = await fetch('https://safebrowsing.googleapis.com/v4/threatMatches:find?key=' + apiKey, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        client: {
-          clientId: 'guardianlink',
-          clientVersion: '2.0'
-        },
-        threatInfo: {
-          threatTypes: ['MALWARE', 'SOCIAL_ENGINEERING', 'UNWANTED_SOFTWARE', 'POTENTIALLY_HARMFUL_APPLICATION'],
-          platformTypes: ['ALL_PLATFORMS'],
-          threatEntries: [
-            { url: url }
-          ]
-        }
-      })
-    });
-
-    const data = await response.json();
-    
-    if (data.error) {
-      const errorMsg = data.error.message || JSON.stringify(data.error);
-      if (errorMsg.includes('API key') || errorMsg.includes('INVALID_ARGUMENT') || errorMsg.includes('Invalid')) {
-        console.error('Google Safe Browsing API key error:', errorMsg);
-        return { 
-          error: 'Invalid or expired API key', 
-          score: 10, 
-          maxScore: 15,
-          status: 'warning',
-          available: false 
-        };
-      }
-      console.error('Google Safe Browsing error:', data.error);
-      return { 
-        error: errorMsg, 
-        score: 10, 
-        maxScore: 15,
-        status: 'warning'
-      };
-    }
-
-    // If matches found, it's dangerous
-    if (data.matches && data.matches.length > 0) {
-      const threats = data.matches.map(m => m.threatType).join(', ');
-      return {
-        safe: false,
-        threats: threats,
-        matchCount: data.matches.length,
-        score: 0,
-        maxScore: 15,
-        status: 'danger',
-        details: data.matches
-      };
-    }
-
-    // No threats found
-    return {
-      safe: true,
-      threats: 'none',
-      matchCount: 0,
-      score: 15,
-      maxScore: 15,
-      status: 'safe'
-    };
-  } catch (error) {
-    console.error('Google Safe Browsing check error:', error);
-    return { 
-      error: error.message, 
-      score: 10, 
-      maxScore: 15,
-      status: 'warning'
-    };
-  }
-}
-
 // Redirect chain analysis
 async function analyzeRedirects(url) {
   try {
@@ -1001,7 +907,7 @@ app.post('/api/scan', async (req, res) => {
   
 try {
     // If DNS resolved, run full checks in parallel; otherwise run a conservative set and mark skipped phases
-    let virusTotal, abuseIPDB, ssl, domainAge, content, redirects, securityHeaders, whois, googleSafeBrowsing;
+    let virusTotal, abuseIPDB, ssl, domainAge, content, redirects, securityHeaders, whois;
     if (dnsResolved) {
       [
         virusTotal,
@@ -1011,8 +917,7 @@ try {
         content,
         redirects,
         securityHeaders,
-        whois,
-        googleSafeBrowsing
+        whois
       ] = await Promise.all([
         scanWithVirusTotal(url),
         checkWithAbuseIPDB(url),
@@ -1021,8 +926,7 @@ try {
         analyzeContent(url),
         analyzeRedirects(url),
         checkSecurityHeaders(url),
-        fetchWhois(url),
-        checkWithGoogleSafeBrowsing(url)
+        fetchWhois(url)
       ]);
 
       results.phases = {
@@ -1033,15 +937,13 @@ try {
         content: { name: 'Content Analysis', ...content },
         redirects: { name: 'Redirect Analysis', ...redirects },
         securityHeaders: { name: 'Security Headers', ...securityHeaders },
-        whois: { name: 'WHOIS Lookup', ...whois },
-        googleSafeBrowsing: { name: 'Google Safe Browsing', ...googleSafeBrowsing }
+        whois: { name: 'WHOIS Lookup', ...whois }
       };
     } else {
       // DNS failed but WHOIS confirmed registration (preflightWhois). Do a limited scan to save API calls.
       whois = preflightWhois;
-      [virusTotal, googleSafeBrowsing, domainAge] = await Promise.all([
+      [virusTotal, domainAge] = await Promise.all([
         scanWithVirusTotal(url),
-        checkWithGoogleSafeBrowsing(url),
         checkDomainAge(url)
       ]);
 
@@ -1059,8 +961,7 @@ try {
         content: { name: 'Content Analysis', ...content },
         redirects: { name: 'Redirect Analysis', ...redirects },
         securityHeaders: { name: 'Security Headers', ...securityHeaders },
-        whois: { name: 'WHOIS Lookup', ...whois },
-        googleSafeBrowsing: { name: 'Google Safe Browsing', ...googleSafeBrowsing }
+        whois: { name: 'WHOIS Lookup', ...whois }
       };
 
       results.skippedPhases = ['abuseIPDB', 'ssl', 'content', 'redirects', 'securityHeaders'];
@@ -1360,6 +1261,5 @@ app.listen(PORT, () => {
   console.log('API Keys configured:');
   console.log(`  VirusTotal: ${process.env.VIRUSTOTAL_API_KEY ? '✓' : '✗'}`);
   console.log(`  AbuseIPDB:  ${process.env.ABUSEIPDB_API_KEY ? '✓' : '✗'}`);
-  console.log('  Google Safe Browsing:', process.env.GOOGLE_SAFE_BROWSING_API_KEY ? '✓' : '✗');
   console.log(`  WHOIS:      ${process.env.WHOIS_API_KEY ? '✓' : '✗'}`);
 });

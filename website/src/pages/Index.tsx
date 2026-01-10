@@ -48,7 +48,7 @@ const Index = () => {
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Guardian Link analyzes URLs through 8 security layers including VirusTotal, 
+              Guardian Link analyzes URLs through multiple security layers including VirusTotal, 
               AbuseIPDB, and advanced heuristics to detect phishing, malware, and suspicious domains.
             </p>
           </motion.div>
@@ -115,7 +115,7 @@ const Index = () => {
           >
             <h2 className="text-3xl font-bold mb-4">How Guardian Link Works</h2>
             <p className="text-muted-foreground max-w-xl mx-auto">
-              A 9-phase security pipeline that aggregates multiple threat intelligence sources
+              A multi-phase security pipeline that aggregates multiple threat intelligence sources
             </p>
           </motion.div>
 
@@ -127,8 +127,7 @@ const Index = () => {
               { phase: 4, name: "Domain Age Verification", time: "100-200ms" },
               { phase: 5, name: "SSL Certificate Analysis", time: "50-100ms" },
               { phase: 6, name: "Heuristic Analysis", time: "5-10ms" },
-              { phase: 7, name: "Google Safe Browsing", time: "100-200ms" },
-              { phase: 8, name: "Score Aggregation", time: "instant" },
+              { phase: 7, name: "Score Aggregation", time: "instant" },
               { phase: 9, name: "Action & Logging", time: "instant" },
             ].map((step, index) => (
               <motion.div

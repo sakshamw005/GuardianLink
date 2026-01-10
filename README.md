@@ -135,7 +135,7 @@ guardianlink/
 - ✅ **Content Analysis** – 15 pt phishing keyword detection
 - ✅ **Redirect Analysis** – 10 pt suspicious redirect chains
 - ✅ **Security Headers** – 10 pt CSP/HSTS validation
-- ✅ **Google Safe Browsing** – 15 pt threat database
+
 
 ### Risk Levels
 - **🔴 CRITICAL** (75+) → Block instantly

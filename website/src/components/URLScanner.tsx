@@ -67,7 +67,7 @@ const SCAN_PHASES = [
   { key: "redirects", name: "Redirect Analysis", description: "Redirect chain inspection", maxScore: 10 },
   { key: "securityHeaders", name: "Security Headers", description: "Header configuration check", maxScore: 10 },
   { key: "whois", name: "WHOIS Lookup", description: "Domain registration intelligence", maxScore: 10 },
-  { key: "googleSafeBrowsing", name: "Google Safe Browsing", description: "Google threat intelligence", maxScore: 15 },
+
   { key: "heuristics", name: "Heuristic Rules", description: "Behavioral & structural analysis", maxScore: 25 },
 ];
 

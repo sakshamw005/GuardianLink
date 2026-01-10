@@ -41,7 +41,7 @@
 - 🔗 **Link Extension** – Auto-connect your browser extension
 - 📱 **Check Status** – See if extension is online & synced
 
-### Security Analysis (8 Phases)
+### Security Analysis
 1. **VirusTotal** – Check against 25+ antivirus engines (25 pts)
 2. **AbuseIPDB** – IP-based threat intelligence (15 pts)
 3. **SSL Certificate** – HTTPS validity & certificate chain (15 pts)
@@ -49,7 +49,7 @@
 5. **Content Analysis** – Detect phishing keywords (15 pts)
 6. **Redirect Chains** – Check for suspicious redirects (10 pts)
 7. **Security Headers** – Validate CSP, HSTS, etc. (10 pts)
-8. **Google Safe Browsing** – Check Google's threat database (15 pts)
+
 
 ### Risk Scoring
 - **🔴 CRITICAL** (75+) – Immediate threat, block access
@@ -121,7 +121,7 @@ DATABASE_URL=./guardianlink.db
 # External APIs
 VIRUSTOTAL_API_KEY=your_key_here
 ABUSEIPDB_API_KEY=your_key_here
-GOOGLE_SAFE_BROWSING_API_KEY=your_key_here
+
 
 # Frontend URL (for CORS)
 FRONTEND_URL=http://localhost:3000
@@ -141,12 +141,7 @@ FRONTEND_URL=http://localhost:3000
 3. Go to Account → API
 4. Copy API key
 
-#### 🔹 Google Safe Browsing
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create new project
-3. Enable "Safe Browsing API"
-4. Create API key
-5. Copy to `.env`
+
 
 ---
 
@@ -380,7 +375,7 @@ This project is licensed under the **MIT License** – see the [LICENSE](../LICE
 
 - **VirusTotal**: https://www.virustotal.com/gui/my-apikey
 - **AbuseIPDB**: https://www.abuseipdb.com/api
-- **Google Safe Browsing**: https://developers.google.com/safe-browsing/v4/get-started
+
 
 ## 📊 System Architecture
 
@@ -394,7 +389,7 @@ Shows loading overlay
   ↓
 Sends to backend (background.js)
   ↓
-Backend analyzes (8 security phases)
+Backend analyzes (security phases)
   ↓
 Decision: BLOCK/WARN/ALLOW
   ↓
