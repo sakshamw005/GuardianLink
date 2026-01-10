@@ -446,7 +446,8 @@ export function URLScanner() {
             
             {/* Phase Details */}
             <div className="space-y-4">
-              {Object.entries(fullScanResponse.phases).map(([key, phase]: [string, any]) => (
+              {Object.entries(fullScanResponse.phases).map(
+                ([key, phase]: [string, any]) => (
                 <motion.div
                   key={key}
                   initial={{ opacity: 0, y: 10 }}
@@ -475,61 +476,77 @@ export function URLScanner() {
                       {phase.score}/{phase.maxScore}
                     </span>
                   </div>
+                
+        {/* Phase Findings */}
+        {Array.isArray(phase.findings) && phase.findings.length > 0 && (
+          <div>
+            <p className="font-semibold text-foreground mb-1">Findings:</p>
+            <ul className="space-y-1 text-sm">
+              {phase.findings.map((finding: any, idx: number) => {
+                // CASE 1: Plain text finding
+                if (typeof finding === 'string') {
+                  return (
+                    <li key={idx} className="list-disc list-inside">
+                      {finding}
+                    </li>
+                  );
+                }
+                if (finding.vendor && finding.category) {
+                            return (
+                              <li
+                                key={idx}
+                                className="font-mono text-destructive"
+                              >
+                                ✗ {finding.vendor}:{' '}
+                                {finding.result || 'Detected'}
+                              </li>
+                            );
+                          }
 
-                  {/* Phase Findings */}
-                  {(phase.findings || phase.evidence || phase.reason || phase.threats) && (
-                    <div className="text-sm space-y-2 text-muted-foreground">
-                      {phase.reason && (
-                        <p><span className="font-semibold text-foreground">Reason:</span> {phase.reason}</p>
+                          return (
+                            <li
+                              key={idx}
+                              className="font-mono text-xs text-muted-foreground"
+                            >
+                              {JSON.stringify(finding)}
+                            </li>
+                          );
+                        }
                       )}
-                      {phase.error && (
-                        <p><span className="font-semibold text-warning">Error:</span> {phase.error}</p>
-                      )}
-                      {phase.threats && (
-                        <p><span className="font-semibold text-destructive">Threats:</span> {phase.threats}</p>
-                      )}
-                      {Array.isArray(phase.findings) && phase.findings.length > 0 && (
-                        <div>
-                          <p className="font-semibold text-foreground mb-1">Findings:</p>
-                          <ul className="list-disc list-inside space-y-1">
-                            {phase.findings.map((finding: string, idx: number) => (
-                              <li key={idx}>{finding}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-                      {phase.evidence && typeof phase.evidence === 'object' && (
-                        <div className="text-xs font-mono bg-background/40 rounded p-2 overflow-auto max-h-32">
-                          {JSON.stringify(phase.evidence, null, 2)}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Overall Recommendation */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className={`mt-6 p-4 rounded-lg border ${
-                fullScanResponse.overallStatus === 'safe' ? 'border-safe/50 bg-safe/10' :
-                fullScanResponse.overallStatus === 'warning' ? 'border-warning/50 bg-warning/10' :
-                'border-destructive/50 bg-destructive/10'
-              }`}
-            >
-              <h4 className="font-semibold mb-2">Security Recommendation</h4>
-              <p className="text-sm">
-                {fullScanResponse.overallStatus === 'safe' && '✓ This URL appears to be safe based on all security checks.'}
-                {fullScanResponse.overallStatus === 'warning' && '⚠ Exercise caution with this URL. Some security indicators are concerning.'}
-                {fullScanResponse.overallStatus === 'danger' && '✗ This URL has significant security concerns. Proceed with extreme caution or avoid it entirely.'}
-              </p>
+                    </ul>
+                  </div>
+                )}
             </motion.div>
-          </motion.div>
+          )
         )}
-      </AnimatePresence>
+      </div>
+
+      {/* Overall Recommendation (OUTSIDE map) */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.5 }}
+        className={`mt-6 p-4 rounded-lg border ${
+          fullScanResponse.overallStatus === 'safe'
+            ? 'border-safe/50 bg-safe/10'
+            : fullScanResponse.overallStatus === 'warning'
+            ? 'border-warning/50 bg-warning/10'
+            : 'border-destructive/50 bg-destructive/10'
+        }`}
+      >
+        <h4 className="font-semibold mb-2">Security Recommendation</h4>
+        <p className="text-sm">
+          {fullScanResponse.overallStatus === 'safe' &&
+            '✓ This URL appears to be safe based on all security checks.'}
+          {fullScanResponse.overallStatus === 'warning' &&
+            '⚠ Exercise caution with this URL. Some security indicators are concerning.'}
+          {fullScanResponse.overallStatus === 'danger' &&
+            '✗ This URL has significant security concerns. Proceed with extreme caution or avoid it entirely.'}
+        </p>
+      </motion.div>
+    </motion.div>
+  )}
+</AnimatePresence>
     </div>
   );
 }

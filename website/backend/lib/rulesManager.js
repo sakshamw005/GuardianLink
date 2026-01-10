@@ -1,91 +1,114 @@
-const fs = require('fs');
-const path = require('path');
+const db = require('./db');
 
-const DATA_FILE = path.join(__dirname, '..', 'data', 'rules.json');
+/* -------------------------------
+   Helpers
+-------------------------------- */
 
-let rules = { version: '1.0', generatedAt: new Date().toISOString(), entries: [] };
-let whitelist = [];
-let blacklist = [];
-
-function _normalizeHostnameFromUrl(u) {
+function normalizeHostname(urlOrDomain) {
   try {
-    return new URL(u).hostname.toLowerCase();
+    return new URL(urlOrDomain).hostname.toLowerCase();
   } catch {
-    return (u || '').toLowerCase();
+    return (urlOrDomain || '').toLowerCase();
   }
 }
 
+/* -------------------------------
+   Lifecycle
+-------------------------------- */
+
+// For DB-backed rules, load() is just a sanity check
 function load() {
   try {
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    rules = JSON.parse(raw);
-    whitelist = rules.entries.filter(e => e.type === 'whitelist');
-    blacklist = rules.entries.filter(e => e.type === 'blacklist');
-    return rules;
+    db.prepare(`SELECT 1 FROM rules LIMIT 1`).get();
+    return true;
   } catch (err) {
-    // If file missing or invalid, initialize default structure
-    console.warn('rulesManager: could not load rules file, initializing empty rules', err.message);
-    rules = { version: '1.0', generatedAt: new Date().toISOString(), entries: [] };
-    whitelist = [];
-    blacklist = [];
-    try {
-      fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-      fs.writeFileSync(DATA_FILE, JSON.stringify(rules, null, 2), 'utf8');
-    } catch (e) {}
-    return rules;
+    console.error('rulesManager: DB not ready', err.message);
+    throw err;
   }
 }
 
-function save() {
-  rules.generatedAt = new Date().toISOString();
-  fs.writeFileSync(DATA_FILE, JSON.stringify(rules, null, 2), 'utf8');
-}
-
-function _domainMatches(entryValue, hostname) {
-  if (!entryValue || !hostname) return false;
-  entryValue = entryValue.toLowerCase();
-  hostname = hostname.toLowerCase();
-  if (hostname === entryValue) return true;
-  if (hostname.endsWith('.' + entryValue)) return true; // subdomain match
-  return false;
-}
+/* -------------------------------
+   Queries
+-------------------------------- */
 
 function isWhitelisted(urlOrDomain) {
-  const host = _normalizeHostnameFromUrl(urlOrDomain);
-  for (const e of whitelist) {
-    if (e.selector === 'domain' && _domainMatches(e.value, host)) return e;
-    if (e.selector === 'url' && (urlOrDomain || '') === e.value) return e;
-    if (e.selector === 'ip' && e.value === host) return e;
-  }
-  return null;
+  const host = normalizeHostname(urlOrDomain);
+
+  return db.prepare(`
+    SELECT *
+    FROM rules
+    WHERE enabled = 1
+      AND type = 'whitelist'
+      AND (
+        (selector = 'domain' AND ? = value)
+        OR (selector = 'domain' AND ? LIKE '%.' || value)
+        OR (selector = 'ip' AND value = ?)
+        OR (selector = 'url' AND value = ?)
+      )
+    LIMIT 1
+  `).get(host, host, host, urlOrDomain);
 }
 
 function isBlacklisted(urlOrDomain) {
-  const host = _normalizeHostnameFromUrl(urlOrDomain);
-  for (const e of blacklist) {
-    if (e.selector === 'domain' && _domainMatches(e.value, host)) return e;
-    if (e.selector === 'url' && (urlOrDomain || '') === e.value) return e;
-    if (e.selector === 'ip' && e.value === host) return e;
-  }
-  return null;
+  const host = normalizeHostname(urlOrDomain);
+
+  return db.prepare(`
+    SELECT *
+    FROM rules
+    WHERE enabled = 1
+      AND type = 'blacklist'
+      AND (
+        (selector = 'domain' AND ? = value)
+        OR (selector = 'domain' AND ? LIKE '%.' || value)
+        OR (selector = 'ip' AND value = ?)
+        OR (selector = 'url' AND value = ?)
+      )
+    LIMIT 1
+  `).get(host, host, host, urlOrDomain);
 }
 
-function addRule(entry) {
-  if (!entry || !entry.id) throw new Error('entry.id is required');
-  rules.entries.push(entry);
-  // refresh caches
-  whitelist = rules.entries.filter(e => e.type === 'whitelist');
-  blacklist = rules.entries.filter(e => e.type === 'blacklist');
-  save();
-  return entry;
-}
+/* -------------------------------
+   Mutations
+-------------------------------- */
 
-function getAll() {
-  return rules;
+function addRule(rule) {
+  if (!rule?.id) throw new Error('rule.id required');
+
+  db.prepare(`
+    INSERT OR IGNORE INTO rules
+    (id, type, selector, value, source, confidence, expires_at, evidence, enabled)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+  `).run(
+    rule.id,
+    rule.type,
+    rule.selector,
+    rule.value,
+    rule.source || 'local',
+    rule.confidence ?? 1.0,
+    rule.expiresAt || null,
+    JSON.stringify(rule.evidence || {})
+  );
+
+  return rule;
 }
 
 function count() {
-  return rules.entries.length;
+  return db.prepare(`SELECT COUNT(*) AS c FROM rules`).get().c;
 }
 
-module.exports = { load, save, isWhitelisted, isBlacklisted, addRule, getAll, count };
+function getAll() {
+  return db.prepare(`SELECT * FROM rules`).all();
+}
+
+/* -------------------------------
+   Exports
+-------------------------------- */
+
+module.exports = {
+  load,
+  isWhitelisted,
+  isBlacklisted,
+  addRule,
+  count,
+  getAll
+};

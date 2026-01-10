@@ -7,10 +7,10 @@ const crypto = require('crypto');
 const scansStore = new Map(); // scanId -> { id, userId, url, status, scan_result, created_at }
 const extensionSessions = new Map(); // extensionToken -> { sessionId, deviceInfo, createdAt }
 const heuristicsManager = require('./lib/heuristicsManager');
-
+const { learnFromVirusTotal } = require('./lib/heuristicLearner');
 const app = express();
 const PORT = process.env.PORT || 3001;
-
+const { applyHeuristicDecay } = require('./lib/heuristicDecay');
 
 // ========== MIDDLEWARE ==========
 const allowedOrigins = [
@@ -73,6 +73,7 @@ try {
 // Load heuristic rules
 try {
   heuristicsManager.load();
+  applyHeuristicDecay();
   console.log(`Heuristics loaded: ${heuristicsManager.getAll().rules.length} rules`);
 } catch (err) {
   console.error('Failed to load heuristics:', err);
@@ -216,58 +217,110 @@ async function scanWithVirusTotal(url) {
     const attributes = analysisData.data?.attributes || {};
     const stats = attributes.stats || {};
     const results = attributes.results || {};
+    const MALWARE_KEYWORDS = [
+      'trojan',
+      'malware',
+      'downloader',
+      'phishing',
+      'backdoor',
+      'dropper',
+      'worm',
+      'ransom'
+    ];
 
-    const isMaliciousByAnyAV = Object.values(results).some(
-      engine => engine.category === 'malicious'
-    );
+    const maliciousFindings = Object.entries(results)
+      .filter(([_, engine]) => {
+        // Explicit malicious / suspicious
+        if (engine.category === 'malicious' || engine.category === 'suspicious') {
+          return true;
+        }
 
-    if (isMaliciousByAnyAV) {
-      return {
-        malicious: stats.malicious || 1,
-        suspicious: stats.suspicious || 0,
-        harmless: stats.harmless || 0,
-        undetected: stats.undetected || 0,
-        total:
-          (stats.malicious || 0) +
-          (stats.suspicious || 0) +
-          (stats.harmless || 0) +
-          (stats.undetected || 0),
-        score: 0,
-        maxScore: 25,
-        status: 'danger',
-        mandate: 'malicious'
-      };
-    }
+        // Fallback: keyword-based detection in result
+        if (engine.result) {
+          const r = engine.result.toLowerCase();
+          return MALWARE_KEYWORDS.some(k => r.includes(k));
+        }
+
+        return false;
+      })
+      .map(([vendor, engine]) => ({
+        vendor,
+        category: engine.category,
+        result: engine.result || 'Detected'
+      }));
 
     const malicious = stats.malicious || 0;
     const suspicious = stats.suspicious || 0;
     const harmless = stats.harmless || 0;
     const undetected = stats.undetected || 0;
     const total = malicious + suspicious + harmless + undetected;
-    
-    // Calculate score (higher is better)
-    let score = 25;
-    if (malicious > 0) {
-      score = Math.max(0, 25 - (malicious * 5));
-    } else if (suspicious > 0) {
-      score = Math.max(10, 25 - (suspicious * 3));
+
+    const isMaliciousByAnyAV = maliciousFindings.length > 0;
+
+    /* =========================
+      MALICIOUS CASE (HARD FAIL)
+      ========================= */
+    if (isMaliciousByAnyAV) {
+      return {
+        malicious,
+        suspicious,
+        harmless,
+        undetected,
+        total,
+
+        score: 0,
+        maxScore: 25,
+        status: 'danger',
+        mandate: 'malicious',
+
+        // ✅ ONLY malicious engines
+        findings: maliciousFindings,
+
+        deductions: [
+          {
+            reason: `${maliciousFindings.length} security vendors flagged this URL as malicious`,
+            penalty: 25
+          }
+        ]
+      };
     }
-    
+
+    /* =========================
+      NON-MALICIOUS CASES
+      ========================= */
+
+    // Suspicious but not malicious
+    if (suspicious > 0) {
+      return {
+        malicious,
+        suspicious,
+        harmless,
+        undetected,
+        total,
+
+        score: Math.max(10, 25 - suspicious * 3),
+        maxScore: 25,
+        status: 'warning'
+      };
+    }
+
+    // Clean
     return {
       malicious,
       suspicious,
       harmless,
       undetected,
       total,
-      score,
+
+      score: 25,
       maxScore: 25,
-      status: malicious > 0 ? 'danger' : suspicious > 0 ? 'warning' : 'safe'
+      status: 'safe'
     };
-  } catch (error) {
-    console.error('VirusTotal error:', error);
-    return { error: error.message, score: 0, maxScore: 25 };
-  }
-}
+  }catch (error) {
+        console.error('VirusTotal error:', error);
+        return { error: error.message, score: 0, maxScore: 25 };
+      }
+    }
 
 // AbuseIPDB check (for domain IP)
 async function checkWithAbuseIPDB(domain) {
@@ -350,99 +403,115 @@ async function checkSSL(url) {
   try {
     const https = require('https');
     const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
-    
+
     if (urlObj.protocol !== 'https:') {
-      return { 
-        valid: false, 
-        error: 'Not using HTTPS', 
-        score: 0, 
+      return {
+        valid: false,
+        error: 'Not using HTTPS',
+        score: 0,
         maxScore: 15,
         status: 'danger'
       };
     }
-    
+
     return new Promise((resolve) => {
-      const req = https.request({
-        hostname: urlObj.hostname,
-        port: 443,
-        method: 'HEAD',
-        timeout: 10000
-      }, (res) => {
-        const cert = res.socket.getPeerCertificate();
-        
-        if (!cert || Object.keys(cert).length === 0) {
-          resolve({ 
-            valid: false, 
-            error: 'No certificate found', 
-            score: 0, 
+      const req = https.request(
+        {
+          hostname: urlObj.hostname,
+          port: 443,
+          method: 'HEAD',
+          timeout: 10000
+        },
+        (res) => {
+          const cert = res.socket.getPeerCertificate();
+
+          if (!cert || Object.keys(cert).length === 0) {
+            return resolve({
+              valid: false,
+              error: 'No certificate found',
+              score: 0,
+              maxScore: 15,
+              status: 'danger'
+            });
+          }
+
+          const validFrom = new Date(cert.valid_from);
+          const validTo = new Date(cert.valid_to);
+          const now = new Date();
+
+          const isValid = now >= validFrom && now <= validTo;
+          const daysUntilExpiry = Math.floor(
+            (validTo - now) / (1000 * 60 * 60 * 24)
+          );
+
+          let score = 15;
+          let status = 'safe';
+          const deductions = [];
+
+          if (!isValid) {
+            deductions.push({
+              reason: 'Invalid or expired SSL certificate',
+              penalty: 15
+            });
+            score = 0;
+            status = 'danger';
+          } else if (daysUntilExpiry < 30) {
+            deductions.push({
+              reason: 'SSL certificate expires in less than 30 days',
+              penalty: 5
+            });
+            score = 10;
+            status = 'warning';
+          }
+
+          resolve({
+            valid: isValid,
+            issuer: cert.issuer?.O || 'Unknown',
+            validFrom: validFrom.toISOString(),
+            validTo: validTo.toISOString(),
+            daysUntilExpiry,
+            score,
             maxScore: 15,
-            status: 'danger'
+            status,
+            deductions
           });
-          return;
         }
-        
-        const validFrom = new Date(cert.valid_from);
-        const validTo = new Date(cert.valid_to);
-        const now = new Date();
-        const isValid = now >= validFrom && now <= validTo;
-        const daysUntilExpiry = Math.floor((validTo - now) / (1000 * 60 * 60 * 24));
-        
-        let score = 15;
-        let status = 'safe';
-        
-        if (!isValid) {
-          score = 0;
-          status = 'danger';
-        } else if (daysUntilExpiry < 30) {
-          score = 10;
-          status = 'warning';
-        }
-        
-        resolve({
-          valid: isValid,
-          issuer: cert.issuer?.O || 'Unknown',
-          validFrom: validFrom.toISOString(),
-          validTo: validTo.toISOString(),
-          daysUntilExpiry,
-          score,
-          maxScore: 15,
-          status
-        });
-      });
-      
+      );
+
       req.on('error', (error) => {
-        resolve({ 
-          valid: false, 
-          error: error.message, 
-          score: 0, 
+        resolve({
+          valid: false,
+          error: error.message,
+          score: 0,
           maxScore: 15,
           status: 'danger'
         });
       });
-      
+
       req.on('timeout', () => {
         req.destroy();
-        resolve({ 
-          valid: false, 
-          error: 'Connection timeout', 
-          score: 5, 
+        resolve({
+          valid: false,
+          error: 'Connection timeout',
+          score: 5,
           maxScore: 15,
           status: 'warning'
         });
       });
-      
+
       req.end();
-    });
+    }); // ✅ Promise closed properly
   } catch (error) {
-    return { 
-      valid: false, 
-      error: error.message, 
-      score: 0, 
+    return {
+      valid: false,
+      error: error.message,
+      score: 0,
       maxScore: 15,
       status: 'danger'
     };
   }
 }
+
 
 // Domain age check using WHOIS-like heuristics
 async function checkDomainAge(url) {
@@ -458,12 +527,14 @@ async function checkDomainAge(url) {
         score: 0,
         maxScore: 10,
         status: 'danger',
-        warnings: ['Hostname is an IP address literal - suspicious']
+        deductions: [
+          {
+            reason: 'IP address used instead of a registered domain',
+            penalty: 10
+          }
+        ]
       };
     }
-
-    // We'll use a simple heuristic based on domain characteristics
-    // In production, you'd want to use a WHOIS API
     const suspiciousPatterns = [
       /\d{4,}/, // Long numbers
       /-{2,}/, // Multiple hyphens
@@ -688,9 +759,14 @@ async function analyzeRedirects(url) {
 
     let score = 10;
     let status = 'safe';
+    const deductions = [];
 
     if (redirects.length > 3) {
       score -= 3;
+      deductions.push({
+        reason: 'Excessive redirect chain detected',
+        penalty: 3
+      });
       status = 'warning';
     }
 
@@ -709,7 +785,10 @@ async function analyzeRedirects(url) {
         }
         if (/^(?:\d{1,3}\.){3}\d{1,3}$/.test(toHost) || /^\[[0-9a-f:]+\]$/.test(toHost)) {
           score -= 3;
-          redirect.suspicious = 'redirects to IP host';
+          deductions.push({
+            reason: 'Redirect leads to IP-based destination',
+            penalty: 3
+          });
         }
       } catch {}
     }
@@ -736,7 +815,8 @@ async function analyzeRedirects(url) {
       redirects,
       score: Math.max(0, score),
       maxScore: 10,
-      status
+      status,
+      deductions
     };
   } catch (error) {
     return { error: error.message, score: 5, maxScore: 10, status: 'warning' };
@@ -789,7 +869,6 @@ async function checkSecurityHeaders(url) {
     return { error: error.message, score: 0, maxScore: 10, status: 'warning' };
   }
 }
-
 // Main scan endpoint
 app.post('/api/scan', async (req, res) => {
   const { url, source } = req.body;
@@ -1025,7 +1104,9 @@ try {
 
   const heuristicsResult = heuristicsManager.evaluate(url, heuristicContext);
 
-  results.phases.heuristics = { name: 'Heuristic Rules', ...heuristicsResult };
+  results.phases.heuristics = {name: 'Heuristic Rules', ...heuristicsResult, 
+                              deductions: (heuristicsResult.matchedRules || []).map(r => ({reason: r.description || r.id, 
+                              penalty: r.score}))};
   
     // Calculate total score
     let totalScore = 0;
@@ -1041,6 +1122,18 @@ try {
     results.percentage = Math.round((totalScore / maxTotalScore) * 100);
     
     if (results.phases.virusTotal?.mandate === 'malicious') {
+      try {
+        learnFromVirusTotal(url, {
+          virusTotal: results.phases.virusTotal,
+          content,
+          redirects,
+          domain,
+          abuseIPDB,
+          ssl
+        });
+      } catch (e) {
+        console.warn('Heuristic learning failed:', e.message);
+      }
       results.overallStatus = 'danger';
       results.percentage = Math.min(results.percentage, 20);
 

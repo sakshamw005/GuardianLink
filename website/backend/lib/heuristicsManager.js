@@ -20,6 +20,9 @@ function load() {
     return heuristics;
   }
 }
+function save() {
+  fs.writeFileSync(DATA_FILE, JSON.stringify(heuristics, null, 2), 'utf8');
+}
 
 function getAll() {
   return heuristics;
@@ -150,6 +153,12 @@ function evaluate(url, context = {}) {
     if (ruleMatched) {
       matchedRules.push(rule);
       totalSuspicion += rule.score;
+      if (typeof rule.confidence === 'number') {
+        rule.confidence = Math.min(1.0, rule.confidence + 0.05);
+      } else {
+        rule.confidence = 0.55; // initialize if missing
+      }
+      rule.lastSeenAt = new Date().toISOString();
     }
   }
 
@@ -161,7 +170,7 @@ function evaluate(url, context = {}) {
   let status = 'safe';
   if (cappedSuspicion >= 20) status = 'danger';
   else if (cappedSuspicion >= 10) status = 'warning';
-
+  save();
   return {
     matchedRules,
     totalSuspicion,
