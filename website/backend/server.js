@@ -520,12 +520,7 @@ async function fetchWhois(url) {
 
     const whoisUrl = `https://www.whoisxmlapi.com/whoisserver/WhoisService?domainName=${encodeURIComponent(domain)}&apiKey=${apiKey}&outputFormat=JSON`;
 
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 10000);
-
-    const res = await fetch(whoisUrl, { signal: controller.signal });
-    clearTimeout(timer);
-
+    const res = await fetch(whoisUrl);
     const data = await res.json();
 
     const parsed = data.WhoisRecord || {};
@@ -563,7 +558,6 @@ async function fetchWhois(url) {
 async function analyzeContent(url) {
   try {
     const response = await fetch(url.startsWith('http') ? url : `https://${url}`, {
-      timeout: 10000,
       headers: {
         'User-Agent': 'Mozilla/5.0 (compatible; GuardianLink/1.0; Security Scanner)'
       }
@@ -829,8 +823,6 @@ app.post('/api/scan', async (req, res) => {
       console.warn('WHOIS lookup failed during DNS fallback:', whoisErr && whoisErr.message ? whoisErr.message : whoisErr);
       preflightWhois = null;
     }
-
-    // If WHOIS is not available or does not indicate a registered domain, short-circuit with 404
     const whoisConfirms = preflightWhois && preflightWhois.available && preflightWhois.createdDate;
     if (!whoisConfirms) {
       return res.status(404).json({
@@ -1048,13 +1040,25 @@ try {
     results.maxTotalScore = maxTotalScore;
     results.percentage = Math.round((totalScore / maxTotalScore) * 100);
     
-    // Determine overall status
-    if (results.percentage >= 80) {
-      results.overallStatus = 'safe';
-    } else if (results.percentage >= 50) {
-      results.overallStatus = 'warning';
-    } else {
+    if (results.phases.virusTotal?.mandate === 'malicious') {
       results.overallStatus = 'danger';
+      results.percentage = Math.min(results.percentage, 20);
+
+      results.securityDecision = {
+        action: 'BLOCK',
+        reason: 'VirusTotal flagged malicious by at least one antivirus engine',
+        confidence: 'HIGH'
+      };
+    }
+    else{
+    // Determine overall status
+      if (results.percentage >= 80) {
+        results.overallStatus = 'safe';
+      } else if (results.percentage >= 50) {
+        results.overallStatus = 'warning';
+      } else {
+        results.overallStatus = 'danger';
+      }
     }
     
     // Store completed scan
