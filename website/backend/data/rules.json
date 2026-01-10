@@ -186,6 +186,320 @@
     { "id": "whitelist:t-me", "type": "whitelist", "selector": "domain", "value": "t.me", "source": "local", "confidence": 1.0, "expiresAt": null, "evidence": {} },
     { "id": "whitelist:snapchat-com", "type": "whitelist", "selector": "domain", "value": "snapchat.com", "source": "local", "confidence": 1.0, "expiresAt": null, "evidence": {} },
     { "id": "whitelist:discord-gg", "type": "whitelist", "selector": "domain", "value": "discord.gg", "source": "local", "confidence": 1.0, "expiresAt": null, "evidence": {} },
-    { "id": "whitelist:bytefcdn-oversea-com", "type": "whitelist", "selector": "domain", "value": "bytefcdn-oversea.com", "source": "local", "confidence": 1.0, "expiresAt": null, "evidence": {} }
+    { "id": "whitelist:bytefcdn-oversea-com", "type": "whitelist", "selector": "domain", "value": "bytefcdn-oversea.com", "source": "local", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+    { "id": "blacklist:110-38-215-152-binsh", "type": "blacklist", "selector": "url", "value": "http://110.38.215.152:48571/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:123-7-226-229-binsh", "type": "blacklist", "selector": "url", "value": "http://123.7.226.229:58290/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-61-236-173-i", "type": "blacklist", "selector": "url", "value": "http://115.61.236.173:52001/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:110-39-231-61-i", "type": "blacklist", "selector": "url", "value": "http://110.39.231.61:37319/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:42-239-143-149-binsh", "type": "blacklist", "selector": "url", "value": "http://42.239.143.149:53058/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:182-124-201-96-binsh", "type": "blacklist", "selector": "url", "value": "http://182.124.201.96:35370/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:31-59-58-26-main-arm6", "type": "blacklist", "selector": "url", "value": "http://31.59.58.26/main_arm6", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-arm5", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/arm5", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-arm", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/arm", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:23-132-164-234-sora-mips", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.mips", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:176-65-149-243-boatnet-x86", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.x86", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-arm6", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.arm6", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:23-132-164-234-sora-spc", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.spc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-arm", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.arm", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:23-132-164-234-sora-sh4", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.sh4", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:23-132-164-234-sora-mpsl", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.mpsl", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-spc", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.spc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-arc", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.arc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-m68k", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.m68k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-mpsl", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.mpsl", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:91-92-242-42-arm4", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/arm4", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-arc", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/arc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-mpsl", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/mpsl", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+    { "id": "blacklist:176-65-149-243-boatnet-arm5", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.arm5", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-arm7", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/arm7", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-aarch64", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/aarch64", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-mipsel", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/mipsel", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-92-242-42-mips", "type": "blacklist", "selector": "url", "value": "http://91.92.242.42/mips", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:23-132-164-234-sora-m68k", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.m68k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-arm7", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.arm7", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:23-132-164-234-sora-ppc", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.ppc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-mips", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.mips", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-ppc", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.ppc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:23-132-164-234-sora-arm", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.arm", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:176-65-149-243-boatnet-sh4", "type": "blacklist", "selector": "url", "value": "http://176.65.149.243/hiddenbin/boatnet.sh4", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:61-52-158-255-i", "type": "blacklist", "selector": "url", "value": "http://61.52.158.255:48699/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-based-sh", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/based.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:42-85-15-228-binsh", "type": "blacklist", "selector": "url", "value": "http://42.85.15.228:57777/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:110-39-231-61-binsh", "type": "blacklist", "selector": "url", "value": "http://110.39.231.61:37319/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-63-182-239-i", "type": "blacklist", "selector": "url", "value": "http://115.63.182.239:50094/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:61-52-158-255-binsh", "type": "blacklist", "selector": "url", "value": "http://61.52.158.255:48699/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:strilenfar67-rebelde-sbs", "type": "blacklist", "selector": "domain", "value": "strilenfar67.rebelde.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:gruqual-abismodepasion-sbs", "type": "blacklist", "selector": "domain", "value": "gruqual.abismodepasion.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:fretansal-marimar-sbs", "type": "blacklist", "selector": "domain", "value": "fretansal.marimar.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:glorinmingir-abismodepasion-sbs", "type": "blacklist", "selector": "domain", "value": "glorinmingir.abismodepasion.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:staguntonsil-mariamercedes-sbs", "type": "blacklist", "selector": "domain", "value": "staguntonsil.mariamercedes.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:frarol-cuidandote-sbs", "type": "blacklist", "selector": "domain", "value": "frarol.cuidandote.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:plafinlungem-corazonindomable-sbs", "type": "blacklist", "selector": "domain", "value": "plafinlungem.corazonindomable.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:trurol07-marimar-sbs", "type": "blacklist", "selector": "domain", "value": "trurol07.marimar.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:clehal-triunfodelamor-sbs", "type": "blacklist", "selector": "domain", "value": "clehal.triunfodelamor.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:prarol-cuidandote-sbs", "type": "blacklist", "selector": "domain", "value": "prarol.cuidandote.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:platanxonjal67-sortilegio-sbs", "type": "blacklist", "selector": "domain", "value": "platanxonjal67.sortilegio.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:striranmonvaz7-lausurpadora-sbs", "type": "blacklist", "selector": "domain", "value": "striranmonvaz7.lausurpadora.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:frepanfinbel7-mariaislena-sbs", "type": "blacklist", "selector": "domain", "value": "frepanfinbel7.mariaislena.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:spruder-mariamercedes-sbs", "type": "blacklist", "selector": "domain", "value": "spruder.mariamercedes.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:grambil-mariaislena-sbs", "type": "blacklist", "selector": "domain", "value": "grambil.mariaislena.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:brucal100-mariadobairro-sbs", "type": "blacklist", "selector": "domain", "value": "brucal100.mariadobairro.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:flomenrinder2-mariadobairro-sbs", "type": "blacklist", "selector": "domain", "value": "flomenrinder2.mariadobairro.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:trugonder-rebelde-sbs", "type": "blacklist", "selector": "domain", "value": "trugonder.rebelde.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:plaminfar76-corazonindomable-sbs", "type": "blacklist", "selector": "domain", "value": "plaminfar76.corazonindomable.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:clevaz-sortilegio-sbs", "type": "blacklist", "selector": "domain", "value": "clevaz.sortilegio.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:straranvel67-lausurpadora-sbs", "type": "blacklist", "selector": "domain", "value": "straranvel67.lausurpadora.sbs", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:87-121-112-123-fentarm7k", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/fentarm7k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:87-121-112-123-fentarm5k", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/fentarm5k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-63-182-239-binsh", "type": "blacklist", "selector": "url", "value": "http://115.63.182.239:50094/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:87-121-112-123-fentsh4k", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/fentsh4k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:87-121-112-123-fentchromek", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/fentchromek", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:87-121-112-123-fentppck", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/fentppck", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+    { "id": "blacklist:182-123-210-95-binsh", "type": "blacklist", "selector": "url", "value": "http://182.123.210.95:32999/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:87-121-112-123-fentarm6k", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/fentarm6k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:91-215-85-42-api-fb79a0ac-png", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/fb79a0ac/33f4d6cd-eda8-48e8-bcd6-7dc5663e96fe/3c602b2b.png", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-215-85-42-api-9b72f516-css", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/9b72f516/33f4d6cd-eda8-48e8-bcd6-7dc5663e96fe/ff208dce.css", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-215-85-42-root-uuid", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/33f4d6cd-eda8-48e8-bcd6-7dc5663e96fe", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:91-215-85-42-api-ea5bb855-css", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/ea5bb855/33f4d6cd-eda8-48e8-bcd6-7dc5663e96fe/9318f502.css", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-215-85-42-hash-root", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/66bb777ecf2257ab4ffa52e86386a383", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:87-121-112-123-niggak-sh", "type": "blacklist", "selector": "url", "value": "http://87.121.112.123/niggak.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:82-221-139-173-old-x86", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.x86", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-sh4", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.sh4", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-arm", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.arm", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-mpsl", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.mpsl", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-ppc", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.ppc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:82-221-139-173-old-spc", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.spc", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-arm5", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.arm5", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-arm7", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.arm7", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:91-215-85-42-uuid-3422b3a9", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/3422b3a9-c126-4bfb-b9d8-41caaf39220d", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:82-221-139-173-old-m68k", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.m68k", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-arm6", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.arm6", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:82-221-139-173-old-mips", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.mips", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:91-215-85-42-api-46fa0c2d-jpg", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/46fa0c2d/3422b3a9-c126-4bfb-b9d8-41caaf39220d/430e7187.jpg", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-215-85-42-api-b8ccaea3-ico", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/b8ccaea3/3422b3a9-c126-4bfb-b9d8-41caaf39220d/e6da5834.ico", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:91-215-85-42-api-f0b429f8-png", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/f0b429f8/3422b3a9-c126-4bfb-b9d8-41caaf39220d/5b4b82d0.png", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:91-215-85-42-api-f6f94cd1-css", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42:3000/api/f6f94cd1/3422b3a9-c126-4bfb-b9d8-41caaf39220d/8f47b7f5.css", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:82-221-139-173-old-x86-64", "type": "blacklist", "selector": "url", "value": "http://82.221.139.173:49180/bins/old.x86_64", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+
+    { "id": "blacklist:91-215-85-42-18-node", "type": "blacklist", "selector": "url", "value": "http://91.215.85.42/18.node", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:112-248-160-112-i", "type": "blacklist", "selector": "url", "value": "http://112.248.160.112:47100/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:39-87-29-154-binsh", "type": "blacklist", "selector": "url", "value": "http://39.87.29.154:33500/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:123-5-124-238-binsh", "type": "blacklist", "selector": "url", "value": "http://123.5.124.238:55189/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-50-250-84-binsh", "type": "blacklist", "selector": "url", "value": "http://115.50.250.84:46645/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:123-12-236-114-i", "type": "blacklist", "selector": "url", "value": "http://123.12.236.114:57701/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-55-129-21-i", "type": "blacklist", "selector": "url", "value": "http://115.55.129.21:58342/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:cdn-jsdelivr-core-clock", "type": "blacklist", "selector": "url", "value": "https://cdn.jsdelivr.net/gh/id-core-rs-com/core-1d/clock", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:113-237-232-255-i", "type": "blacklist", "selector": "url", "value": "http://113.237.232.255:41069/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:112-248-160-112-binsh", "type": "blacklist", "selector": "url", "value": "http://112.248.160.112:47100/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:77-236-74-65-i", "type": "blacklist", "selector": "url", "value": "http://77.236.74.65:52449/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:123-12-236-114-binsh", "type": "blacklist", "selector": "url", "value": "http://123.12.236.114:57701/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:110-37-11-66-i", "type": "blacklist", "selector": "url", "value": "http://110.37.11.66:57182/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-55-129-21-binsh", "type": "blacklist", "selector": "url", "value": "http://115.55.129.21:58342/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:113-237-232-255-binsh", "type": "blacklist", "selector": "url", "value": "http://113.237.232.255:41069/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:182-117-84-219-binsh", "type": "blacklist", "selector": "url", "value": "http://182.117.84.219:37887/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-50-61-253-i", "type": "blacklist", "selector": "url", "value": "http://115.50.61.253:44262/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:84-200-87-36-nexuscorp-mpsl", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.mpsl", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:84-200-87-36-nexuscorp-x86", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.x86", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:84-200-87-36-nexuscorp-arm7", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.arm7", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:84-200-87-36-nexuscorp-arm5", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.arm5", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:84-200-87-36-nexuscorp-arm", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.arm", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:84-200-87-36-nexuscorp-arm6", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.arm6", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:84-200-87-36-nexuscorp-mips", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/nexuscorp.mips", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:84-200-87-36-faith", "type": "blacklist", "selector": "url", "value": "http://84.200.87.36/faith", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:115-55-130-153-i", "type": "blacklist", "selector": "url", "value": "http://115.55.130.153:52199/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-55-130-153-binsh", "type": "blacklist", "selector": "url", "value": "http://115.55.130.153:52199/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:123-12-199-94-i", "type": "blacklist", "selector": "url", "value": "http://123.12.199.94:57371/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:221-15-184-124-binsh", "type": "blacklist", "selector": "url", "value": "http://221.15.184.124:54807/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+    { "id": "blacklist:123-5-174-37-i", "type": "blacklist", "selector": "url", "value": "http://123.5.174.37:41936/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:123-12-199-94-binsh", "type": "blacklist", "selector": "url", "value": "http://123.12.199.94:57371/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:123-5-174-37-binsh", "type": "blacklist", "selector": "url", "value": "http://123.5.174.37:41936/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:175-169-96-67-binsh", "type": "blacklist", "selector": "url", "value": "http://175.169.96.67:48034/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:61-53-3-238-i", "type": "blacklist", "selector": "url", "value": "http://61.53.3.238:59964/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:185-236-25-149-rsh", "type": "blacklist", "selector": "url", "value": "http://185.236.25.149/r.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:185-236-25-149-t", "type": "blacklist", "selector": "url", "value": "http://185.236.25.149/t", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:61-53-3-238-binsh", "type": "blacklist", "selector": "url", "value": "http://61.53.3.238:59964/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:219-157-67-60-i", "type": "blacklist", "selector": "url", "value": "http://219.157.67.60:41316/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:23-132-164-234-sora-x86", "type": "blacklist", "selector": "url", "value": "http://23.132.164.234/bins/sora.x86", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:182-120-2-166-i", "type": "blacklist", "selector": "url", "value": "http://182.120.2.166:36544/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-49-231-244-i", "type": "blacklist", "selector": "url", "value": "http://115.49.231.244:34899/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:219-157-67-60-binsh", "type": "blacklist", "selector": "url", "value": "http://219.157.67.60:41316/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-50-250-84-i", "type": "blacklist", "selector": "url", "value": "http://115.50.250.84:46645/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-49-231-244-binsh", "type": "blacklist", "selector": "url", "value": "http://115.49.231.244:34899/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:182-120-2-166-binsh", "type": "blacklist", "selector": "url", "value": "http://182.120.2.166:36544/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:112-227-1-27-binsh", "type": "blacklist", "selector": "url", "value": "http://112.227.1.27:40257/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:42-230-213-222-i", "type": "blacklist", "selector": "url", "value": "http://42.230.213.222:40810/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:2-194-65-235-video-scr", "type": "blacklist", "selector": "url", "value": "http://2.194.65.235:8040/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:175-173-109-85-i", "type": "blacklist", "selector": "url", "value": "http://175.173.109.85:54104/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:cdn-jsdelivr-core-stage", "type": "blacklist", "selector": "url", "value": "https://cdn.jsdelivr.net/gh/id-core-rs-com/core-id4/stage", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:2-194-65-235-photo-scr", "type": "blacklist", "selector": "url", "value": "http://2.194.65.235:8040/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:123-12-10-105-i", "type": "blacklist", "selector": "url", "value": "http://123.12.10.105:43726/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:182-121-85-237-i", "type": "blacklist", "selector": "url", "value": "http://182.121.85.237:34167/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:182-121-162-221-i", "type": "blacklist", "selector": "url", "value": "http://182.121.162.221:36739/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:123-12-10-105-binsh", "type": "blacklist", "selector": "url", "value": "http://123.12.10.105:43726/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:cdn-jsdelivr-core-fact", "type": "blacklist", "selector": "url", "value": "https://cdn.jsdelivr.net/gh/id-core-rs-com/core-id/fact", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:123-9-22-55-i", "type": "blacklist", "selector": "url", "value": "http://123.9.22.55:34712/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:182-121-162-221-binsh", "type": "blacklist", "selector": "url", "value": "http://182.121.162.221:36739/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:61-52-230-205-binsh", "type": "blacklist", "selector": "url", "value": "http://61.52.230.205:39804/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:123-9-22-55-binsh", "type": "blacklist", "selector": "url", "value": "http://123.9.22.55:34712/bin.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:221-15-176-30-i", "type": "blacklist", "selector": "url", "value": "http://221.15.176.30:55703/i", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:130-12-180-85-womp", "type": "blacklist", "selector": "url", "value": "http://130.12.180.85/file/womp", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:218-95-53-91-video-scr", "type": "blacklist", "selector": "url", "value": "http://218.95.53.91:81/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:177-212-245-64-info-zip", "type": "blacklist", "selector": "url", "value": "http://177.212.245.64:41799/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:118-68-254-207-photo-scr", "type": "blacklist", "selector": "url", "value": "http://118.68.254.207:8080/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:149-210-78-252-photo-scr", "type": "blacklist", "selector": "url", "value": "http://149.210.78.252/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:149-210-78-252-av-scr", "type": "blacklist", "selector": "url", "value": "http://149.210.78.252/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:124-72-91-32-video-scr", "type": "blacklist", "selector": "url", "value": "http://124.72.91.32:50000/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:149-210-78-252-video-scr", "type": "blacklist", "selector": "url", "value": "http://149.210.78.252/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:218-95-53-91-photo-scr", "type": "blacklist", "selector": "url", "value": "http://218.95.53.91:81/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:149-210-43-192-av-scr", "type": "blacklist", "selector": "url", "value": "http://149.210.43.192/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:149-210-43-192-video-scr", "type": "blacklist", "selector": "url", "value": "http://149.210.43.192/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:149-210-43-192-photo-scr", "type": "blacklist", "selector": "url", "value": "http://149.210.43.192/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:79-150-66-69-video-scr", "type": "blacklist", "selector": "url", "value": "http://79.150.66.69/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+
+    { "id": "blacklist:218-95-53-91-info-zip", "type": "blacklist", "selector": "url", "value": "http://218.95.53.91:81/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-158-144-186-video-scr", "type": "blacklist", "selector": "url", "value": "http://27.158.144.186:9000/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:201-223-242-89-photo-scr", "type": "blacklist", "selector": "url", "value": "http://201.223.242.89:82/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:186-6-233-238-av-scr-81", "type": "blacklist", "selector": "url", "value": "http://186.6.233.238:81/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:118-68-254-207-video-scr", "type": "blacklist", "selector": "url", "value": "http://118.68.254.207:8080/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:37-84-19-29-info-zip", "type": "blacklist", "selector": "url", "value": "http://37.84.19.29/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:186-6-233-238-info-zip", "type": "blacklist", "selector": "url", "value": "http://186.6.233.238:81/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-83-107-20-info-zip", "type": "blacklist", "selector": "url", "value": "http://37.83.107.20/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-217-45-239-av-scr", "type": "blacklist", "selector": "url", "value": "http://115.217.45.239:41798/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:14-107-43-120-video-lnk", "type": "blacklist", "selector": "url", "value": "http://14.107.43.120:81/video.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:14-107-43-120-av-lnk", "type": "blacklist", "selector": "url", "value": "http://14.107.43.120:81/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-159-134-240-photo-scr", "type": "blacklist", "selector": "url", "value": "http://189.159.134.240/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:179-89-220-208-av-scr", "type": "blacklist", "selector": "url", "value": "http://179.89.220.208/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-81-227-107-av-lnk", "type": "blacklist", "selector": "url", "value": "http://37.81.227.107/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-84-104-115-photo-scr", "type": "blacklist", "selector": "url", "value": "http://37.84.104.115/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:27-154-95-135-av-scr", "type": "blacklist", "selector": "url", "value": "http://27.154.95.135:3389/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-152-125-155-video-scr", "type": "blacklist", "selector": "url", "value": "http://189.152.125.155/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:220-162-35-196-photo-scr", "type": "blacklist", "selector": "url", "value": "http://220.162.35.196:8088/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:117-24-155-135-av-scr", "type": "blacklist", "selector": "url", "value": "http://117.24.155.135:9000/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-154-95-135-video-scr", "type": "blacklist", "selector": "url", "value": "http://27.154.95.135:3389/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:76-238-215-206-info-zip", "type": "blacklist", "selector": "url", "value": "http://76.238.215.206/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-215-240-101-video-scr", "type": "blacklist", "selector": "url", "value": "http://115.215.240.101:8081/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-158-144-186-av-scr", "type": "blacklist", "selector": "url", "value": "http://27.158.144.186:9000/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:220-162-35-196-video-lnk", "type": "blacklist", "selector": "url", "value": "http://220.162.35.196:8088/video.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-84-19-29-photo-scr", "type": "blacklist", "selector": "url", "value": "http://37.84.19.29/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:116-48-27-129-av-lnk", "type": "blacklist", "selector": "url", "value": "http://116.48.27.129:8080/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-82-14-24-photo-scr", "type": "blacklist", "selector": "url", "value": "http://37.82.14.24/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:191-25-198-234-video-scr", "type": "blacklist", "selector": "url", "value": "http://191.25.198.234/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-152-125-155-av-lnk", "type": "blacklist", "selector": "url", "value": "http://189.152.125.155/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-158-144-186-av-lnk", "type": "blacklist", "selector": "url", "value": "http://27.158.144.186:9000/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} } ,
+    { "id": "blacklist:117-24-155-135-photo-scr", "type": "blacklist", "selector": "url", "value": "http://117.24.155.135:9000/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-159-155-250-photo-scr", "type": "blacklist", "selector": "url", "value": "http://189.159.155.250/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-217-45-239-video-lnk", "type": "blacklist", "selector": "url", "value": "http://115.217.45.239:41798/video.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:122-117-144-181-av-lnk", "type": "blacklist", "selector": "url", "value": "http://122.117.144.181:10080/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:191-25-198-234-av-lnk", "type": "blacklist", "selector": "url", "value": "http://191.25.198.234/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:149-210-43-192-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://149.210.43.192/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:103-67-52-142-info-zip", "type": "blacklist", "selector": "url", "value": "http://103.67.52.142/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:103-67-52-141-info-zip", "type": "blacklist", "selector": "url", "value": "http://103.67.52.141/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:117-24-155-135-video-scr", "type": "blacklist", "selector": "url", "value": "http://117.24.155.135:9000/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-84-104-115-info-zip", "type": "blacklist", "selector": "url", "value": "http://37.84.104.115/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:191-25-198-234-info-zip", "type": "blacklist", "selector": "url", "value": "http://191.25.198.234/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:186-6-233-238-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://186.6.233.238/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-159-155-250-video-scr", "type": "blacklist", "selector": "url", "value": "http://189.159.155.250/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:37-84-26-129-info-zip", "type": "blacklist", "selector": "url", "value": "http://37.84.26.129/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:187-213-115-213-av-lnk", "type": "blacklist", "selector": "url", "value": "http://187.213.115.213/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:220-162-35-196-av-scr", "type": "blacklist", "selector": "url", "value": "http://220.162.35.196:8088/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:177-212-255-10-av-scr", "type": "blacklist", "selector": "url", "value": "http://177.212.255.10:41799/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:115-215-240-101-info-zip", "type": "blacklist", "selector": "url", "value": "http://115.215.240.101:8081/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-151-162-116-video-scr", "type": "blacklist", "selector": "url", "value": "http://27.151.162.116:81/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:14-107-43-120-photo-scr", "type": "blacklist", "selector": "url", "value": "http://14.107.43.120:81/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:120-33-156-74-av-lnk", "type": "blacklist", "selector": "url", "value": "http://120.33.156.74:9000/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-158-144-186-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://27.158.144.186:9000/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:151-243-109-160-bins-sh", "type": "blacklist", "selector": "url", "value": "http://151.243.109.160/bins.sh", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:27-158-144-186-photo-scr", "type": "blacklist", "selector": "url", "value": "http://27.158.144.186:9000/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:124-72-91-32-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://124.72.91.32:50000/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:79-150-66-69-video-lnk", "type": "blacklist", "selector": "url", "value": "http://79.150.66.69/video.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:116-48-27-129-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://116.48.27.129:8080/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:117-24-155-135-info-zip", "type": "blacklist", "selector": "url", "value": "http://117.24.155.135:9000/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:179-89-220-208-video-scr", "type": "blacklist", "selector": "url", "value": "http://179.89.220.208/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:189-159-134-240-video-scr", "type": "blacklist", "selector": "url", "value": "http://189.159.134.240/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-151-162-116-av-lnk", "type": "blacklist", "selector": "url", "value": "http://27.151.162.116:81/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:14-107-43-120-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://14.107.43.120:81/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:117-28-134-204-photo-scr", "type": "blacklist", "selector": "url", "value": "http://117.28.134.204:3389/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:118-68-254-207-av-lnk", "type": "blacklist", "selector": "url", "value": "http://118.68.254.207:8080/av.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:179-89-220-208-photo-scr", "type": "blacklist", "selector": "url", "value": "http://179.89.220.208/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:103-67-52-143-info-zip", "type": "blacklist", "selector": "url", "value": "http://103.67.52.143/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-152-125-155-info-zip", "type": "blacklist", "selector": "url", "value": "http://189.152.125.155/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:120-33-156-74-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://120.33.156.74:9000/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:189-159-134-240-info-zip", "type": "blacklist", "selector": "url", "value": "http://189.159.134.240/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:186-6-233-238-av-scr-root", "type": "blacklist", "selector": "url", "value": "http://186.6.233.238/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:186-6-233-238-video-scr-81", "type": "blacklist", "selector": "url", "value": "http://186.6.233.238:81/video.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:117-28-134-204-av-scr", "type": "blacklist", "selector": "url", "value": "http://117.28.134.204:3389/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:120-33-156-74-video-lnk", "type": "blacklist", "selector": "url", "value": "http://120.33.156.74:9000/video.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:149-210-78-252-photo-lnk", "type": "blacklist", "selector": "url", "value": "http://149.210.78.252/photo.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:27-158-144-186-info-zip", "type": "blacklist", "selector": "url", "value": "http://27.158.144.186:9000/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:118-68-254-207-video-lnk", "type": "blacklist", "selector": "url", "value": "http://118.68.254.207:8080/video.lnk", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:120-33-156-74-info-zip", "type": "blacklist", "selector": "url", "value": "http://120.33.156.74:9000/info.zip", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:37-81-227-107-photo-scr", "type": "blacklist", "selector": "url", "value": "http://37.81.227.107/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+    { "id": "blacklist:71-7-239-142-photo-scr", "type": "blacklist", "selector": "url", "value": "http://71.7.239.142/photo.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} },
+
+    { "id": "blacklist:189-152-125-155-av-scr", "type": "blacklist", "selector": "url", "value": "http://189.152.125.155/av.scr", "source": "virustotal+heuristics", "confidence": 1.0, "expiresAt": null, "evidence": {} }
   ]
 }
