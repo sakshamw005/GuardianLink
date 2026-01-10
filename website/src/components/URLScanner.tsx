@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
 import { ShieldIcon } from "./ShieldIcon";
 import { ScanPhase, PhaseStatus } from "./ScanPhase";
 import { RiskScore } from "./RiskScore";
@@ -419,9 +419,10 @@ export function URLScanner() {
                       {/* Phase Status */}
                       <ScanPhase
                         name={phase.name}
+                        description={phase.description}
                         status={getPhaseStatus(index)}
-                        phase={index}
-                        isRunning={index === currentPhase}
+                        score={phaseResult?.score}
+                        maxScore={phaseResult?.maxScore}
                       />
                     </motion.div>
                   );
