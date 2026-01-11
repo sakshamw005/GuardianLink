@@ -6,6 +6,7 @@ import { ScanPhase, PhaseStatus } from "./ScanPhase";
 import { RiskScore } from "./RiskScore";
 import { Search, ExternalLink, RotateCcw, AlertCircle, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface PhaseResult {
   name: string;
@@ -72,8 +73,8 @@ const SCAN_PHASES = [
 ];
 
 
-// Default to localhost, but can be configured
-const BACKEND_URL = "http://localhost:3001";
+// // Default to localhost, but can be configured
+// const BACKEND_URL = "http://localhost:3001";
 
 export function URLScanner() {
   const [url, setUrl] = useState("");
