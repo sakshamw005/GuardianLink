@@ -27,15 +27,14 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (Postman, curl, server-to-server)
-    if (!origin) return callback(null, true);
+    if (!origin) {
+      return callback(null, true);
+    }
 
-    // In production, allow all origins
     if (process.env.NODE_ENV === 'production') {
       return callback(null, true);
     }
 
-    // In development, restrict to localhost
     const allowedOrigins = [
       "http://localhost:3000",
       "http://localhost:3001",
@@ -49,7 +48,7 @@ app.use(cors({
       return callback(null, true);
     }
 
-    return callback(new Error("Not allowed by CORS"));
+    return callback(null, false);
   },
   credentials: true
 }));
