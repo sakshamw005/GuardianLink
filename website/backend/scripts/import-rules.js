@@ -1,5 +1,12 @@
-const path = require('path');
 const db = require('../lib/db');
+const path = require('path');
+
+const existing = db.prepare('SELECT COUNT(*) AS c FROM rules').get().c;
+if (existing > 0) {
+  console.log('ℹ️ Rules already exist, skipping import');
+  process.exit(0);
+}
+// const db = require('../lib/db');
 
 const raw = require(path.join(__dirname, '../data/rules.json'));
 let rules;

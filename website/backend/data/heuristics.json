@@ -88,7 +88,9 @@
           "work"
         ]
       },
-      "score": 10
+      "score": 10,
+      "confidence": 0.55,
+      "lastSeenAt": "2026-01-11T06:42:15.075Z"
     },
     {
       "id": "brand:exact_match",

@@ -1,7 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_FILE = path.join(__dirname, '..', 'data', 'heuristics.json');
+const DATA_FILE =
+  process.env.HEURISTICS_FILE ||
+  path.join(__dirname, '..', 'data', 'heuristics.json');
+
+fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
 
 let heuristics = { version: '1.0', description: '', rules: [] };
 

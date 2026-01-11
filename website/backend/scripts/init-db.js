@@ -14,17 +14,6 @@ CREATE TABLE IF NOT EXISTS rules (
   created_at TEXT DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE TABLE IF NOT EXISTS heuristics (
-  id TEXT PRIMARY KEY,
-  condition TEXT,
-  weight INTEGER,
-  confidence REAL,
-  source TEXT,
-  evidence TEXT,
-  enabled INTEGER DEFAULT 1,
-  created_at TEXT DEFAULT CURRENT_TIMESTAMP
-);
-
 CREATE TABLE IF NOT EXISTS url_intelligence (
   url TEXT PRIMARY KEY,
   verdict TEXT,

@@ -4,7 +4,7 @@
   "description": "Guardian Link URL security scanner with user authentication and real-time sync",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/init-db.js && node scripts/import-rules.js && node server.js",
     "dev": "node server.js"
   },
   "dependencies": {

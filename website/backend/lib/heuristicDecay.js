@@ -1,8 +1,11 @@
 const fs = require('fs');
 const path = require('path');
 
-const HEURISTICS_FILE = path.join(__dirname, '..', 'data', 'heuristics.json');
+const HEURISTICS_FILE =
+  process.env.HEURISTICS_FILE ||
+  path.join(__dirname, '..', 'data', 'heuristics.json');
 
+fs.mkdirSync(path.dirname(HEURISTICS_FILE), { recursive: true });
 function daysBetween(a, b) {
   return Math.floor((b - a) / (1000 * 60 * 60 * 24));
 }
