@@ -162,7 +162,7 @@ guardianlink/
 
 | Name | Role | GitHub |
 |------|------|--------|
-| **Saksham Wadhwa** | Full Stack Developer | [@saksham-wadhwa](https://github.com) |
+| **Saksham Wadhwa** | Full Stack Developer | [@Sakshamw005](https://github.com/sakshamw005) |
 | **Arjit Sharma** | Full Stack Developer | [@Arjit74](https://github.com/Arjit74) |
 
 ---
