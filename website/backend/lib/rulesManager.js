@@ -3,6 +3,16 @@ const db = require('./db');
 /* -------------------------------
    Helpers
 -------------------------------- */
+function ruleExists(type, selector, value) {
+  return db.prepare(`
+    SELECT 1 FROM rules
+    WHERE enabled = 1
+      AND type = ?
+      AND selector = ?
+      AND value = ?
+    LIMIT 1
+  `).get(type, selector, value);
+}
 
 function normalizeHostname(urlOrDomain) {
   try {
@@ -86,7 +96,8 @@ function addRule(rule) {
     rule.source || 'local',
     rule.confidence ?? 1.0,
     rule.expiresAt || null,
-    JSON.stringify(rule.evidence || {})
+    JSON.stringify(rule.evidence || {}),
+    rule.enabled ?? 1 
   );
 
   return rule;
@@ -110,5 +121,6 @@ module.exports = {
   isBlacklisted,
   addRule,
   count,
-  getAll
+  getAll,
+  ruleExists
 };

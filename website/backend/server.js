@@ -11,6 +11,7 @@ const { learnFromVirusTotal } = require('./lib/heuristicLearner');
 const app = express();
 const PORT = process.env.PORT || 3001;
 const { applyHeuristicDecay } = require('./lib/heuristicDecay');
+const { getCachedScan, upsertScan , canonicalizeUrl } = require('./lib/urlCache');
 
 async function checkURLReachability(inputUrl) {
   const controller = new AbortController();
@@ -937,8 +938,31 @@ app.post('/api/scan', async (req, res) => {
       }
     });
   }
+  
+  normalizedUrl = canonicalizeUrl(normalizedUrl);
+  const cached = getCachedScan(normalizedUrl);
 
-
+  if (cached) {
+    return res.json({
+      url: normalizedUrl,
+      cached: true,
+      cachedAgeSeconds: Math.floor(cached.ageMs / 1000),
+      totalScore: cached.confidence,
+      maxTotalScore: 100,
+      percentage: cached.confidence,
+      overallStatus: cached.verdict,
+      message: 'Result served from cache (within 24 hours)',
+      phases: {
+        cache: {
+          name: 'Cached Result',
+          score: cached.confidence,
+          maxScore: 100,
+          status: cached.verdict,
+          reason: 'Previously scanned within 24 hours'
+        }
+      }
+    });
+  }
 
   // Phase 1: Whitelist check (fast)
   const whitelistMatch = rulesManager.isWhitelisted(url);
@@ -956,6 +980,7 @@ app.post('/api/scan', async (req, res) => {
       percentage: 100,
       overallStatus: 'safe'
     };
+
     return res.json(results);
   }
 
@@ -1158,7 +1183,40 @@ try {
     scansStore.set(scanId, entry);
     
     console.log(`✅ Scan complete. Score: ${results.percentage}% (${results.overallStatus})`);
-    
+    upsertScan(
+      normalizedUrl,
+      results.overallStatus,
+      results.percentage,
+      {
+        score: results.percentage,
+        blocked: results.overallStatus === 'danger',
+        source: 'full-scan'
+      }
+    );
+    if (results.overallStatus === 'danger') {
+      setImmediate(() => {
+        try {
+          const hostname = new URL(normalizedUrl).hostname;
+
+          if (!rulesManager.ruleExists('blacklist', 'domain', hostname)) {
+            rulesManager.addRule({
+              id: crypto.randomUUID(),
+              type: 'blacklist',
+              selector: 'domain',
+              value: hostname,
+              source: 'auto-learning',
+              confidence: 0.85,
+              evidence: { reason: 'Repeated malicious verdict' },
+              enabled: 0 // REVIEW REQUIRED
+            });
+          }
+        } catch (e) {
+          console.warn('Auto-learning failed:', e.message);
+        }
+      });
+    }
+
+
     res.json(results);
   } catch (error) {
     console.error('Scan error:', error);
@@ -1346,12 +1404,11 @@ app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════════╗
 ║                                                           ║
-║   🛡️  Guardian Link Backend Server v2.0                   ║
+║               🛡️Guardian Link Backend Server              ║
 ║                                                           ║
-║   Server running on: http://localhost:${PORT}               ║
+║   Server running on: http://localhost:${PORT}             ║
 ║                                                           ║
 ║   Endpoints:                                              ║
-║   - (auth endpoints removed)                          ║
 ║   - POST /api/extension/register     - Register extension ║
 ║   - GET  /api/extension/verify       - Verify connection  ║
 ║   - POST /api/scan                   - Scan URL (website) ║
@@ -1359,7 +1416,7 @@ app.listen(PORT, () => {
 ║   - GET  /api/scans                  - Get scan history   ║
 ║   - GET  /api/health                 - Check status       ║
 ║                                                           ║
-╚═══════════════════════════════════════════════════════════╝
+╚═══════════════════════════════════════════════════════════╝ 
   `);
   
   console.log('API Keys configured:');
