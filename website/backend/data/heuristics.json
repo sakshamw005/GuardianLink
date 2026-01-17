@@ -11,7 +11,7 @@
       },
       "score": 15,
       "confidence": 1,
-      "lastSeenAt": "2026-01-10T20:20:04.925Z"
+      "lastSeenAt": "2026-01-17T13:07:53.637Z"
     },
     {
       "id": "url:long_length",
@@ -685,6 +685,20 @@
         "suspicious_txt": true
       },
       "score": 10
+    },
+    {
+      "id": "learned:vt:login_form_detected-obfuscated_script",
+      "description": "Learned from VT-malicious URL: http://178.50.234.87:9301/sshd",
+      "conditions": {
+        "login_form_detected": true,
+        "obfuscated_script": true
+      },
+      "severity": "high",
+      "scoreImpact": -30,
+      "confidence": 0.85,
+      "source": "virustotal-learning",
+      "createdAt": "2026-01-17T13:07:53.646Z",
+      "expiresAt": null
     }
   ]
 }
