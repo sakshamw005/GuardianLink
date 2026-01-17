@@ -11,7 +11,7 @@
       },
       "score": 15,
       "confidence": 1,
-      "lastSeenAt": "2026-01-17T13:07:53.637Z"
+      "lastSeenAt": "2026-01-17T21:11:12.672Z"
     },
     {
       "id": "url:long_length",
@@ -55,7 +55,9 @@
       "condition": {
         "domain_age_days_lt": 7
       },
-      "score": 30
+      "score": 30,
+      "lastSeenAt": "2026-01-17T21:18:54.310Z",
+      "confidence": 0.55
     },
     {
       "id": "domain:age_7_30d",
@@ -64,7 +66,9 @@
       "condition": {
         "domain_age_days_lt": 30
       },
-      "score": 20
+      "score": 20,
+      "lastSeenAt": "2026-01-17T21:18:54.311Z",
+      "confidence": 0.55
     },
     {
       "id": "domain:age_30_180d",
@@ -73,7 +77,9 @@
       "condition": {
         "domain_age_days_lt": 180
       },
-      "score": 10
+      "score": 10,
+      "lastSeenAt": "2026-01-17T21:18:54.311Z",
+      "confidence": 0.55
     },
     {
       "id": "domain:risky_tld",
@@ -128,7 +134,9 @@
       "condition": {
         "https": false
       },
-      "score": 10
+      "score": 10,
+      "lastSeenAt": "2026-01-17T21:11:12.673Z",
+      "confidence": 0.55
     },
     {
       "id": "ssl:cert_age_lt_7d",
@@ -173,7 +181,9 @@
       "condition": {
         "login_form_detected": true
       },
-      "score": 20
+      "score": 20,
+      "lastSeenAt": "2026-01-17T21:22:46.941Z",
+      "confidence": 0.6000000000000001
     },
     {
       "id": "page:password_brand_combo",
@@ -192,7 +202,9 @@
       "condition": {
         "js_redirect": true
       },
-      "score": 15
+      "score": 15,
+      "lastSeenAt": "2026-01-17T21:12:37.719Z",
+      "confidence": 0.55
     },
     {
       "id": "page:external_post",
@@ -362,7 +374,9 @@
       "condition": {
         "js_redirect": true
       },
-      "score": 10
+      "score": 10,
+      "lastSeenAt": "2026-01-17T21:12:37.719Z",
+      "confidence": 0.55
     },
     {
       "id": "redirect:loop",
