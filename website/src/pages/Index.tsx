@@ -31,9 +31,25 @@ const Index = () => {
             </span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm text-muted-foreground">
-            <a href="#features" className="hover:text-foreground transition-colors">Features</a>
-            <a href="#how-it-works" className="hover:text-foreground transition-colors">How it Works</a>
-          </nav>
+          <a
+            href="https://addons.mozilla.org/en-GB/firefox/addon/guardianlink-url-shield/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-primary hover:text-primary/90 transition-colors px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20"
+          >
+            Get Browser Protection
+          </a>
+
+
+          <a href="#features" className="hover:text-foreground transition-colors">
+            Features
+          </a>
+
+          <a href="#how-it-works" className="hover:text-foreground transition-colors">
+            How it Works
+          </a>
+        </nav>
+
         </div>
       </header>
 
