@@ -12,6 +12,51 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const { applyHeuristicDecay } = require('./lib/heuristicDecay');
 
+async function checkURLReachability(inputUrl) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 8000);
+
+  try {
+    const normalizedUrl = inputUrl.startsWith("http")
+      ? inputUrl
+      : `https://${inputUrl}`;
+
+    const res = await fetch(normalizedUrl, {
+      method: "HEAD",
+      redirect: "follow",
+      signal: controller.signal,
+      headers: {
+        "User-Agent": "Mozilla/5.0 (GuardianLink/1.0)"
+      }
+    });
+    
+
+    clearTimeout(timer);
+
+    if (
+      (res.status >= 200 && res.status < 400) ||
+      res.status === 401 ||
+      res.status === 403
+    ) {
+      return { exists: true, status: res.status, finalUrl: res.url };
+    }
+
+    if (res.status === 404 || res.status === 410) {
+      return { exists: false, status: res.status };
+    }
+
+    return { exists: true, status: res.status };
+
+  } catch (err) {
+    clearTimeout(timer);
+    return {
+      exists: false,
+      status: err.name === "AbortError" ? "TIMEOUT" : "NETWORK_ERROR"
+    };
+  }
+}
+
+
 // ========== MIDDLEWARE ==========
 const allowedOrigins = [
   "http://localhost:3000",
@@ -79,7 +124,6 @@ app.use((err, req, res, next) => {
   }
   next(err);
 });
-
 // Load rules (whitelist / blacklist) into memory
 try {
   rulesManager.load();
@@ -115,42 +159,6 @@ function verifyExtensionToken(req, res, next) {
   req.session = session;
   next();
 }
-
-// Authentication removed (no DB/JWT or user registration in this build)
-// Health check (detailed version appears later in the file) -- previously used DB; removed duplicate.
-
-// ========== EXTENSION ENDPOINTS ==========
-
-// Register extension session (public endpoint)
-app.post('/api/extension/register', (req, res) => {
-  const extensionToken = crypto.randomUUID();
-  const sessionId = crypto.randomUUID();
-  const { deviceInfo } = req.body;
-  
-  // Store in-memory (no DB)
-  extensionSessions.set(extensionToken, {
-    sessionId,
-    deviceInfo: deviceInfo || null,
-    createdAt: new Date().toISOString()
-  });
-
-  res.json({
-    extensionToken,
-    sessionId,
-    message: 'Extension registered successfully'
-  });
-});
-
-// Verify extension is connected (returns session info)
-app.get('/api/extension/verify', verifyExtensionToken, (req, res) => {
-  const session = req.session;
-  res.json({
-    authenticated: true,
-    sessionId: session.sessionId,
-    deviceInfo: session.deviceInfo
-  });
-});
-
 // ========== SCANNING ENDPOINTS ==========
 
 // VirusTotal URL scan
@@ -435,13 +443,15 @@ async function checkSSL(url) {
     return new Promise((resolve) => {
       const req = https.request(
         {
-          hostname: urlObj.hostname,
+          host: urlObj.hostname,
+          servername: urlObj.hostname, // 🔥 REQUIRED FOR CLOUDFARE
           port: 443,
           method: 'HEAD',
-          timeout: 10000
+          timeout: 10000,
+          rejectUnauthorized: true
         },
         (res) => {
-          const cert = res.socket.getPeerCertificate();
+          const cert = res.socket.getPeerCertificate(true);
 
           if (!cert || Object.keys(cert).length === 0) {
             return resolve({
@@ -475,7 +485,7 @@ async function checkSSL(url) {
             status = 'danger';
           } else if (daysUntilExpiry < 30) {
             deductions.push({
-              reason: 'SSL certificate expires in less than 30 days',
+              reason: 'SSL certificate expires soon',
               penalty: 5
             });
             score = 10;
@@ -483,10 +493,11 @@ async function checkSSL(url) {
           }
 
           resolve({
-            valid: isValid,
+            valid: true,
             issuer: cert.issuer?.O || 'Unknown',
-            validFrom: validFrom.toISOString(),
-            validTo: validTo.toISOString(),
+            subject: cert.subject?.CN,
+            validFrom: cert.valid_from,
+            validTo: cert.valid_to,
             daysUntilExpiry,
             score,
             maxScore: 15,
@@ -518,7 +529,7 @@ async function checkSSL(url) {
       });
 
       req.end();
-    }); // ✅ Promise closed properly
+    });
   } catch (error) {
     return {
       valid: false,
@@ -894,46 +905,40 @@ app.post('/api/scan', async (req, res) => {
   if (!url) {
     return res.status(400).json({ error: 'URL is required' });
   }
-
-  // Phase 0: Domain existence check
-  const dns = require('dns').promises;
-  let hostname;
-
-  // Validate URL and extract hostname
+  
+  // Phase 0: URL reachability check (HTTP-based)
+  let normalizedUrl;
   try {
-    hostname = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
-  } catch (err) {
-    return res.status(400).json({ error: 'Invalid URL', message: 'Provided URL is not a valid URL' });
+    normalizedUrl = url.startsWith('http') ? url : `https://${url}`;
+    new URL(normalizedUrl); // validation
+  } catch {
+    return res.status(400).json({
+      error: 'INVALID_URL',
+      message: 'Provided URL is not a valid URL'
+    });
   }
 
-  // Quick DNS resolution check (A/AAAA) to avoid wasting API calls
-  let dnsResolved = true;
-  let preflightWhois = null;
-  try {
-    await dns.lookup(hostname);
-  } catch (err) {
-    dnsResolved = false;
-    console.warn(`DNS lookup failed for ${hostname}; attempting WHOIS lookup to verify registration...`);
-    try {
-      preflightWhois = await fetchWhois(url);
-    } catch (whoisErr) {
-      console.warn('WHOIS lookup failed during DNS fallback:', whoisErr && whoisErr.message ? whoisErr.message : whoisErr);
-      preflightWhois = null;
-    }
-    const whoisConfirms = preflightWhois && preflightWhois.available && preflightWhois.createdDate;
-    if (!whoisConfirms) {
-      return res.status(404).json({
-        error: 'DNS_PROBE_POSSIBLE',
-        message: "This site can’t be reached",
-        details: `${hostname}'s DNS address could not be found. WHOIS lookup did not confirm registration.`,
-        uiHint: 'DNS_NOT_FOUND',
-        whois: preflightWhois,
-        overallStatus: 'danger'
-      });
-    }
+  const reachability = await checkURLReachability(normalizedUrl);
 
-    console.log(`WHOIS indicates ${hostname} is registered; proceeding with a limited scan (DNS unresolved).`);
+  if (!reachability.exists) {
+    return res.status(200).json({
+      overallStatus: 'invalid',
+      phases: {
+        reachability: {
+          name: 'URL Reachability Check',
+          status: 'invalid',
+          score: 0,
+          maxScore: 0,
+          reason:
+            reachability.status === 404 || reachability.status === 410
+              ? "The entered URL doesn't exist"
+              : "The URL is unreachable or not responding"
+        }
+      }
+    });
   }
+
+
 
   // Phase 1: Whitelist check (fast)
   const whitelistMatch = rulesManager.isWhitelisted(url);
@@ -997,64 +1002,37 @@ app.post('/api/scan', async (req, res) => {
 try {
     // If DNS resolved, run full checks in parallel; otherwise run a conservative set and mark skipped phases
     let virusTotal, abuseIPDB, ssl, domainAge, content, redirects, securityHeaders, whois;
-    if (dnsResolved) {
-      [
-        virusTotal,
-        abuseIPDB,
-        ssl,
-        domainAge,
-        content,
-        redirects,
-        securityHeaders,
-        whois
-      ] = await Promise.all([
-        scanWithVirusTotal(url),
-        checkWithAbuseIPDB(url),
-        checkSSL(url),
-        checkDomainAge(url),
-        analyzeContent(url),
-        analyzeRedirects(url),
-        checkSecurityHeaders(url),
-        fetchWhois(url)
-      ]);
+    [
+      virusTotal,
+      abuseIPDB,
+      ssl,
+      domainAge,
+      content,
+      redirects,
+      securityHeaders,
+      whois
+    ] = await Promise.all([
+      scanWithVirusTotal(url),
+      checkWithAbuseIPDB(url),
+      checkSSL(url),
+      checkDomainAge(url),
+      analyzeContent(url),
+      analyzeRedirects(url),
+      checkSecurityHeaders(url),
+      fetchWhois(url)
+    ]);
+    results.phases = {
+      virusTotal: { name: 'VirusTotal Analysis', ...virusTotal },
+      abuseIPDB: { name: 'AbuseIPDB Check', ...abuseIPDB },
+      ssl: { name: 'SSL Certificate', ...ssl },
+      domainAge: { name: 'Domain Analysis', ...domainAge },
+      content: { name: 'Content Analysis', ...content },
+      redirects: { name: 'Redirect Analysis', ...redirects },
+      securityHeaders: { name: 'Security Headers', ...securityHeaders },
+      whois: { name: 'WHOIS Lookup', ...whois }
+    };
 
-      results.phases = {
-        virusTotal: { name: 'VirusTotal Analysis', ...virusTotal },
-        abuseIPDB: { name: 'AbuseIPDB Check', ...abuseIPDB },
-        ssl: { name: 'SSL Certificate', ...ssl },
-        domainAge: { name: 'Domain Analysis', ...domainAge },
-        content: { name: 'Content Analysis', ...content },
-        redirects: { name: 'Redirect Analysis', ...redirects },
-        securityHeaders: { name: 'Security Headers', ...securityHeaders },
-        whois: { name: 'WHOIS Lookup', ...whois }
-      };
-    } else {
-      // DNS failed but WHOIS confirmed registration (preflightWhois). Do a limited scan to save API calls.
-      whois = preflightWhois;
-      [virusTotal, domainAge] = await Promise.all([
-        scanWithVirusTotal(url),
-        checkDomainAge(url)
-      ]);
 
-      abuseIPDB = { error: 'SKIPPED_DNS', score: 15, maxScore: 15, status: 'warning', reason: 'Skipped because DNS lookup failed' };
-      ssl = { error: 'SKIPPED_DNS', score: 0, maxScore: 15, status: 'danger', reason: 'Skipped because DNS lookup failed' };
-      content = { error: 'SKIPPED_DNS', score: 10, maxScore: 15, status: 'warning', findings: ['Content fetch skipped due to DNS lookup failure'] };
-      redirects = { redirectCount: 0, redirects: [], score: 10, maxScore: 10, status: 'warning', reason: 'Skipped because DNS lookup failed' };
-      securityHeaders = { error: 'SKIPPED_DNS', score: 0, maxScore: 10, status: 'warning', findings: ['Skipped because DNS lookup failed'] };
-
-      results.phases = {
-        virusTotal: { name: 'VirusTotal Analysis', ...virusTotal },
-        abuseIPDB: { name: 'AbuseIPDB Check', ...abuseIPDB },
-        ssl: { name: 'SSL Certificate', ...ssl },
-        domainAge: { name: 'Domain Analysis', ...domainAge },
-        content: { name: 'Content Analysis', ...content },
-        redirects: { name: 'Redirect Analysis', ...redirects },
-        securityHeaders: { name: 'Security Headers', ...securityHeaders },
-        whois: { name: 'WHOIS Lookup', ...whois }
-      };
-
-      results.skippedPhases = ['abuseIPDB', 'ssl', 'content', 'redirects', 'securityHeaders'];
-    }
   // Evaluate heuristics against the gathered context
   const domain = (() => {
     try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname; }
@@ -1228,7 +1206,18 @@ app.post('/api/scan/realtime', verifyExtensionToken, async (req, res) => {
   }
 
   try {
-    await dns.lookup(hostname);
+    const reachability = await checkURLReachability(
+    url.startsWith('http') ? url : `https://${url}`
+  );
+
+  if (!reachability.exists) {
+    return res.json({
+      verdict: 'ALLOW',
+      reason: 'URL unreachable',
+      overallStatus: 'warning'
+    });
+  }
+
   } catch (err) {
     return res.status(404).json({
       error: 'DNS_PROBE_POSSIBLE',
@@ -1274,7 +1263,7 @@ app.post('/api/scan/realtime', verifyExtensionToken, async (req, res) => {
     
     results.virusTotal = virusTotal.status === 'fulfilled' ? virusTotal.value : { error: 'Timeout' };
     results.abuseIPDB = abuseIPDB.status === 'fulfilled' ? abuseIPDB.value : { error: 'Timeout' };
-    
+    let riskScore = 100;
     if (results.virusTotal.malicious > 0) riskScore -= 25;
     if (results.virusTotal.suspicious > 0) riskScore -= 10;
     if (results.abuseIPDB.abuseConfidenceScore > 50) riskScore -= 15;

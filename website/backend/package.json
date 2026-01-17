@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node scripts/init-db.js && node scripts/import-rules.js && node server.js",
-    "dev": "node server.js"
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "better-sqlite3": "^12.6.0",

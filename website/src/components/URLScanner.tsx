@@ -24,7 +24,7 @@ interface ScanResponse {
   totalScore: number;
   maxTotalScore: number;
   percentage: number;
-  overallStatus: "safe" | "warning" | "danger";
+  overallStatus: OverallStatus;
 }
 
 interface ScanResult {
@@ -34,7 +34,7 @@ interface ScanResult {
   maxScore: number;
   details?: string;
 }
-
+type OverallStatus = "safe" | "warning" | "danger" | "invalid";
 interface ScanResponseFull {
   url: string;
   timestamp: string;
@@ -56,7 +56,7 @@ interface ScanResponseFull {
   totalScore: number;
   maxTotalScore: number;
   percentage: number;
-  overallStatus: "safe" | "warning" | "danger";
+  overallStatus: OverallStatus; 
 }
 
 const SCAN_PHASES = [
@@ -146,6 +146,22 @@ export function URLScanner() {
         body: JSON.stringify({ url }),
       }).then(async (res) => {
         const data = await res.json();
+
+        if (data.overallStatus === "invalid") {
+            setError(
+              data.phases?.reachability?.reason ||
+              "The entered URL doesn't exist"
+            );
+
+            setScanning(false);
+            setScanComplete(false);
+            setCurrentPhase(-1);
+            setResults([]);
+            setTotalScore(0);
+            setFullScanResponse(null);
+
+            return null;
+          }
 
         if (data.uiHint === "DNS_NOT_FOUND") {
           setError(
@@ -247,6 +263,7 @@ export function URLScanner() {
           </div>
         </motion.div>
       )}
+      
 
       {/* URL Input Section */}
       <motion.div 
@@ -322,7 +339,7 @@ export function URLScanner() {
 
       {/* Results Section */}
       <AnimatePresence>
-        {!error && (scanning || scanComplete) && (
+        {!error && (scanning || scanComplete) && fullScanResponse?.overallStatus !== "invalid" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -436,7 +453,7 @@ export function URLScanner() {
 
       {/* Detailed Results Section */}
       <AnimatePresence>
-        {scanComplete && fullScanResponse && (
+        {scanComplete && fullScanResponse && fullScanResponse.overallStatus !== "invalid" && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
