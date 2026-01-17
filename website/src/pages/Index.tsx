@@ -1,9 +1,18 @@
-import { URLScanner } from "@/components/URLScanner";
-import { ShieldIcon } from "@/components/ShieldIcon";
+import { URLScanner } from "../components/URLScanner";
+import { ShieldIcon } from "../components/ShieldIcon";
 import { Shield, Zap, Lock, Eye } from "lucide-react";
 import { motion } from "framer-motion";
+import { RiskGauge } from "../components/metrics/RiskGauge";
+import { HeuristicImpact } from "../components/metrics/HeuristicImpact";
+import { DetectionSignals } from "../components/metrics/DetectionSignals";
+import { RiskTrendGraph } from "../components/metrics/RiskTrendGraph";
+import { VerdictBadge } from "../components/metrics/VerdictBadge";
+import { PhaseRiskHistogram } from "../components/metrics/PhaseRiskHistogram";
+import { useState } from "react";
+import { ScanMetrics } from "../lib/types/ScanMetrics";
 
 const Index = () => {
+  const [scanMetrics, setScanMetrics] = useState<ScanMetrics | null>(null);
   return (
     <div className="min-h-screen bg-background grid-pattern relative overflow-hidden">
       {/* Animated background gradients */}
@@ -54,8 +63,55 @@ const Index = () => {
           </motion.div>
 
           {/* URL Scanner Component */}
-          <URLScanner />
+          <URLScanner onScanComplete={setScanMetrics} />
+            </section>
+
+            {scanMetrics && ( <section className="container py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="mb-10 text-center"
+        >
+          <h2 className="text-3xl font-bold mb-2">Security Metrics</h2>
+          <p className="text-muted-foreground">
+            Aggregated risk intelligence from the completed scan
+          </p>
+        </motion.div>
+
+        {/* Tier 1 — Decision */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <RiskGauge
+            score={scanMetrics.riskScore}
+            verdict={scanMetrics.verdict}
+          />
+
+          <HeuristicImpact
+            score={scanMetrics.heuristics.score}
+            max={scanMetrics.heuristics.max}
+          />
+
+          <VerdictBadge verdict={scanMetrics.verdict} />
+        </div>
+
+        {/* Tier 2 — Detection Signals */}
+        <div className="mt-8">
+          <DetectionSignals
+            vtMalicious={scanMetrics.signals.vtMalicious}
+            vtSuspicious={scanMetrics.signals.vtSuspicious}
+            heuristicHits={scanMetrics.signals.heuristicHits}
+          />
+        </div>
+
+        {/* Tier 3 — Graphs */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+          <RiskTrendGraph data={scanMetrics.riskTrend} />
+          <PhaseRiskHistogram phases={scanMetrics.phases} />
+        </div>
         </section>
+      )}
+
+
 
         {/* Features Section */}
         <section id="features" className="container py-16 border-t border-border/50">

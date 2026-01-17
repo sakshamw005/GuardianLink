@@ -20,7 +20,9 @@
       "condition": {
         "url_length_gt": 100
       },
-      "score": 10
+      "score": 10,
+      "confidence": 0.55,
+      "lastSeenAt": "2026-01-17T20:35:17.644Z"
     },
     {
       "id": "url:encoded_chars",
@@ -695,10 +697,11 @@
       },
       "severity": "high",
       "scoreImpact": -30,
-      "confidence": 0.85,
+      "confidence": 1,
       "source": "virustotal-learning",
       "createdAt": "2026-01-17T13:07:53.646Z",
-      "expiresAt": null
+      "expiresAt": null,
+      "lastSeenAt": "2026-01-17T20:35:17.644Z"
     }
   ]
 }

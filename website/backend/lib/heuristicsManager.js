@@ -141,7 +141,7 @@ function evaluate(url, context = {}) {
     hostingType: context.hosting_type ?? context.hostingType,
     ipAgeDays: context.ip_age_days ?? context.ipAgeDays
   };
-
+  
   for (const rule of heuristics.rules) {
     let ruleMatched = true;
 
@@ -175,6 +175,7 @@ function evaluate(url, context = {}) {
   if (cappedSuspicion >= 20) status = 'danger';
   else if (cappedSuspicion >= 10) status = 'warning';
   save();
+
   return {
     matchedRules,
     totalSuspicion,

@@ -6,6 +6,7 @@ import { ScanPhase, PhaseStatus } from "./ScanPhase";
 import { RiskScore } from "./RiskScore";
 import { Search, ExternalLink, RotateCcw, AlertCircle, Settings } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { ScanMetrics } from "../lib/types/ScanMetrics";
 const BACKEND_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface PhaseResult {
@@ -15,6 +16,10 @@ interface PhaseResult {
   status: "safe" | "warning" | "danger";
   error?: string;
   [key: string]: unknown;
+}
+
+interface URLScannerProps {
+  onScanComplete: (metrics: ScanMetrics | null) => void;
 }
 
 interface ScanResponse {
@@ -76,7 +81,7 @@ const SCAN_PHASES = [
 // // Default to localhost, but can be configured
 // const BACKEND_URL = "http://localhost:3001";
 
-export function URLScanner() {
+export function URLScanner({ onScanComplete }: URLScannerProps) {
   const [url, setUrl] = useState("");
   const [scanning, setScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
@@ -110,6 +115,7 @@ export function URLScanner() {
   };
 
   const performRealScan = async () => {
+    onScanComplete(null);
     if (!url) return;
 
     setScanning(true);
@@ -215,6 +221,64 @@ export function URLScanner() {
       setCurrentPhase(SCAN_PHASES.length);
       setScanComplete(true);
       setFullScanResponse(scanResponse as ScanResponseFull);
+      const vtFindings = Array.isArray(scanResponse.phases.virusTotal?.findings) ? (scanResponse.phases.virusTotal!.findings as any[]) : [];
+
+      const vtMalicious = vtFindings.filter(
+        (f: any) => f.category === "malicious"
+      ).length;
+
+      const vtSuspicious = vtFindings.filter(
+        (f: any) => f.category === "suspicious"
+      ).length;
+
+      const heuristicHits = Array.isArray(scanResponse.phases.heuristics?.findings) ? scanResponse.phases.heuristics!.findings.length : 0;
+
+
+      const metrics: ScanMetrics = {
+        riskScore: scanResponse.percentage,
+
+        verdict:
+          scanResponse.overallStatus === "danger"
+            ? "danger"
+            : scanResponse.overallStatus === "warning"
+            ? "warning"
+            : "safe",
+
+        phases: [
+          { name: "VirusTotal", score: scanResponse.phases.virusTotal?.score ?? 0, max: 25 },
+          { name: "AbuseIPDB", score: scanResponse.phases.abuseIPDB?.score ?? 0, max: 15 },
+          { name: "SSL", score: scanResponse.phases.ssl?.score ?? 0, max: 15 },
+          { name: "Domain", score: scanResponse.phases.domainAge?.score ?? 0, max: 10 },
+          { name: "Content", score: scanResponse.phases.content?.score ?? 0, max: 15 },
+          { name: "Redirects", score: scanResponse.phases.redirects?.score ?? 0, max: 10 },
+          { name: "Headers", score: scanResponse.phases.securityHeaders?.score ?? 0, max: 10 },
+          { name: "Heuristics", score: scanResponse.phases.heuristics?.score ?? 0, max: 25 }
+        ],
+
+        heuristics: {
+          score: scanResponse.phases.heuristics?.score ?? 0,
+          max: 25
+        },
+
+        signals: {
+          vtMalicious,
+          vtSuspicious,
+          heuristicHits
+        },
+
+        riskTrend: [
+          { label: "VT", value: scanResponse.phases.virusTotal?.score ?? 0 },
+          { label: "AbuseIPDB", value: scanResponse.phases.abuseIPDB?.score ?? 0 },
+          { label: "SSL", value: scanResponse.phases.ssl?.score ?? 0 },
+          { label: "Content", value: scanResponse.phases.content?.score ?? 0 },
+          { label: "Redirects", value: scanResponse.phases.redirects?.score ?? 0 },
+          { label: "Heuristics", value: scanResponse.phases.heuristics?.score ?? 0 }
+        ]
+      };
+
+
+      onScanComplete(metrics);
+
     } catch (err) {
       console.error("Scan error:", err);
       setError("Failed to complete scan. Check if backend server is running.");
@@ -231,6 +295,7 @@ export function URLScanner() {
     setCurrentPhase(-1);
     setTotalScore(0);
     setError(null);
+    onScanComplete(null);
   };
 
   const getPhaseStatus = (index: number): PhaseStatus => {
