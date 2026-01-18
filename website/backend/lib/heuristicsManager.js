@@ -14,7 +14,6 @@ let heuristics = { version: '1.0', description: '', rules: [] };
 const MAX_RULE_PENALTY = 3;      // max deduction per rule
 const MAX_TOTAL_PENALTY = 20;   // cap heuristic phase damage
 const MAX_SCORE = 25;
-
 // =========================
 
 function load() {
@@ -52,7 +51,6 @@ function evaluate(url, context = {}) {
     let matched = true;
 
     for (const [key, expected] of Object.entries(condition)) {
-      // numeric operators
       if (key.endsWith('_gt')) {
         const base = key.replace('_gt', '');
         if (!(signals[base] > expected)) { matched = false; break; }
@@ -113,12 +111,29 @@ function evaluate(url, context = {}) {
 
   save();
 
+  // ===============================
+  // 🔥 ADDITIONS (NO REMOVALS)
+  // ===============================
+
+  const findings = matchedRules.map(rule => ({
+    id: rule.id,
+    category: rule.category,
+    description: rule.description,
+    scoreImpact: Math.min(rule.score || MAX_RULE_PENALTY, MAX_RULE_PENALTY),
+    confidence: rule.confidence ?? 0.55
+  }));
+
   return {
+    // existing outputs
     matchedRules,
     totalSuspicion,
     score,
     maxScore: MAX_SCORE,
-    status
+    status,
+
+    // 🔥 NEW — what UI needs
+    findings,                 // <-- frontend uses this
+    hitCount: findings.length // <-- Heuristic Hits
   };
 }
 

@@ -25,7 +25,7 @@ export function HeuristicImpact({
       </div>
 
       <div className="text-xs text-muted-foreground mt-2">
-        {percent}% of heuristic rules triggered
+        Heuristic Confidence Score: {percent}% 
       </div>
     </div>
   );

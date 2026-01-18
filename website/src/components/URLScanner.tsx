@@ -585,15 +585,19 @@ export function URLScanner({ onScanComplete }: URLScannerProps) {
                               </li>
                             );
                           }
-
                           return (
                             <li
                               key={idx}
-                              className="font-mono text-xs text-muted-foreground"
+                              className="text-sm font-medium"
                             >
-                              {JSON.stringify(finding)}
+                              <span className="capitalize text-primary">
+                                {finding.category}
+                              </span>
+                              {": "}
+                              {finding.description}
                             </li>
                           );
+
                         }
                       )}
                     </ul>
